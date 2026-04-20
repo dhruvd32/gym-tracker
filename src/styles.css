@@ -574,6 +574,133 @@ input:focus, select:focus {
 .muted { color: var(--ink-soft); }
 .tabular { font-variant-numeric: tabular-nums; }
 
+/* ——— Tabbar — 3 columns ——— */
+.tabbar {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* ——— Session builder ——— */
+
+.add-exercise-btn {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--ink-soft);
+  border-radius: 10px;
+  padding: 16px;
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.add-exercise-btn:active {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.ghost-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--f-mono);
+}
+.ghost-btn:active { color: var(--ink); }
+.ghost-btn.danger { color: var(--accent); border-color: var(--accent); }
+.ghost-btn.danger:active { background: var(--accent); color: white; }
+
+.mini-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1;
+  min-width: 26px;
+}
+.mini-btn:active { color: var(--ink); border-color: var(--accent); }
+.mini-btn.danger { color: var(--accent); }
+
+/* Floating Log Day bar above the tab bar */
+.log-day-bar {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  padding: 10px var(--pad);
+  z-index: 15;
+  background: linear-gradient(180deg, transparent 0%, var(--bg) 35%);
+  pointer-events: none;
+}
+.log-day-btn {
+  pointer-events: auto;
+  width: 100%;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px var(--accent-glow), 0 0 0 1px var(--accent);
+  transition: transform 100ms ease;
+}
+.log-day-btn:active { transform: scale(0.985); }
+
+/* Edit-mode row inside .logged-set */
+.logged-set.edit-mode {
+  gap: 8px;
+}
+.logged-set.edit-mode input {
+  padding: 6px 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ——— History ——— */
+
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+.history-head:active { background: var(--bg-raise); }
+.history-day {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.history-body {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--line-soft);
+}
+.history-exercise {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.history-exercise:last-child { border-bottom: none; }
+
 .back-link {
   display: inline-flex;
   align-items: center;

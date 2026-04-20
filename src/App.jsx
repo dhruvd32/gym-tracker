@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { LogScreen } from './components/LogScreen.jsx';
 import { HeatmapScreen } from './components/HeatmapScreen.jsx';
+import { HistoryScreen } from './components/HistoryScreen.jsx';
 import { flushSyncQueue, installSyncTriggers, onSyncStateChange } from './data/sync.js';
 
 export default function App() {
-  const [tab, setTab] = useState('log'); // 'log' | 'heat'
+  const [tab, setTab] = useState('log'); // 'log' | 'heat' | 'history'
   const [toast, setToast] = useState(null);
   const [syncState, setSyncState] = useState({ status: 'idle', pending: 0 });
 
@@ -27,6 +28,11 @@ export default function App() {
     syncState.status === 'pending' ? `${syncState.pending || 0} pending` :
     syncState.status === 'offline' ? 'Offline' : 'Idle';
 
+  let screen;
+  if      (tab === 'log')     screen = <LogScreen     showToast={showToast} />;
+  else if (tab === 'heat')    screen = <HeatmapScreen />;
+  else                        screen = <HistoryScreen showToast={showToast} />;
+
   return (
     <div className="app">
       <header className="topbar">
@@ -38,7 +44,7 @@ export default function App() {
         </span>
       </header>
 
-      {tab === 'log' ? <LogScreen showToast={showToast} /> : <HeatmapScreen />}
+      {screen}
 
       <nav className="tabbar">
         <button
@@ -54,6 +60,13 @@ export default function App() {
         >
           <span className="mark">02</span>
           Heatmap
+        </button>
+        <button
+          className={tab === 'history' ? 'active' : ''}
+          onClick={() => setTab('history')}
+        >
+          <span className="mark">03</span>
+          History
         </button>
       </nav>
 
