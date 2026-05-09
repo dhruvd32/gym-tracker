@@ -713,4 +713,59 @@ input:focus, select:focus {
   border: none;
   padding: 14px var(--pad) 0;
 }
+
+/* ——— Auth screen ——— */
+
+.auth-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--pad);
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.auth-brand {
+  font-family: var(--f-display);
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.auth-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-family: var(--f-mono);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+  margin-top: 8px;
+}
+
+.auth-btn:hover {
+  border-color: var(--ink-soft);
+  background: var(--bg-raise);
+}
 .back-link:hover { color: var(--ink); }

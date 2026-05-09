@@ -2,31 +2,41 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('gym-tracker');
 
-// v1 — sets, sessions, syncQueue (initial schema; upgraded below)
+// v1 — sets, sessions, syncQueue
 db.version(1).stores({
   sets:      '++id, sessionId, date, exerciseName, dayType, primaryGroup, primarySub, synced',
   sessions:  '++id, &sessionId, date, dayType',
   syncQueue: '++id, setId, attempts, lastError',
 });
 
-// v2 — syncQueue gains `action` so we can queue create / update / delete operations,
-// and set records store `notionPageId` once written so we can later edit or delete them.
-// (Dexie only needs the schema line for indexed fields; non-indexed fields are free-form,
-// so `notionPageId` on `sets` doesn't require a schema change.)
+// v2 — syncQueue gains `action`; sets store `notionPageId`
 db.version(2).stores({
   sets:      '++id, sessionId, date, exerciseName, dayType, primaryGroup, primarySub, synced',
   sessions:  '++id, &sessionId, date, dayType',
   syncQueue: '++id, setId, action, attempts, lastError',
 }).upgrade(async (tx) => {
-  // Back-fill existing queue items as "create" so they're valid under the new schema.
   await tx.table('syncQueue').toCollection().modify((q) => {
     if (!q.action) q.action = 'create';
   });
 });
 
+// v3 — switch backend from Notion to Supabase.
+// `supabaseId` replaces `notionPageId` on sets and syncQueue delete jobs.
+// `meta` table stores lastSyncAt and other key/value bookkeeping.
+// All local data is cleared; it will be re-pulled from Supabase on first login.
+db.version(3).stores({
+  sets:      '++id, sessionId, date, exerciseName, dayType, primaryGroup, primarySub, synced, supabaseId',
+  sessions:  '++id, &sessionId, date, dayType',
+  syncQueue: '++id, setId, action, attempts, lastError',
+  meta:      'key',
+}).upgrade(async (tx) => {
+  await tx.table('sets').clear();
+  await tx.table('sessions').clear();
+  await tx.table('syncQueue').clear();
+});
+
 // ——— Creation ———
 
-// Writes a set to the local `sets` table AND queues a create-in-Notion job.
 export async function addSet(payload) {
   return db.transaction('rw', db.sets, db.syncQueue, db.sessions, async () => {
     const existingSession = await db.sessions.where({ sessionId: payload.sessionId }).first();
@@ -53,18 +63,15 @@ export async function addSet(payload) {
 
 // ——— Sync bookkeeping ———
 
-export async function markSetSynced(setId, notionPageId) {
+export async function markSetSynced(setId, supabaseId) {
   await db.sets.update(setId, {
     synced: 1,
-    notionPageId: notionPageId || undefined,
+    supabaseId: supabaseId || undefined,
     syncedAt: new Date().toISOString(),
   });
   await db.syncQueue.where({ setId }).delete();
 }
 
-// Called after a non-create queue item (update/delete) succeeds —
-// removes that single queue row without touching the set record (set is
-// either already updated, or already locally deleted).
 export async function clearSyncQueueItem(queueId) {
   await db.syncQueue.delete(queueId);
 }
@@ -85,19 +92,13 @@ export async function getPendingQueue() {
 
 // ——— Edit ———
 
-// Updates weight/reps (and optional other fields) on an existing set.
-// If the set was already synced to Notion, queues an update-in-Notion job.
-// If the set is still pending create, the existing queue item picks up the new values
-// naturally (it re-reads the set at sync time), so no extra queue entry is needed.
 export async function updateSetFields(setId, fields) {
   return db.transaction('rw', db.sets, db.syncQueue, async () => {
     const set = await db.sets.get(setId);
     if (!set) return;
     await db.sets.update(setId, fields);
 
-    // If already synced, queue an update
-    if (set.synced && set.notionPageId) {
-      // Collapse duplicate pending updates — keep one open update job per set.
+    if (set.synced && set.supabaseId) {
       const existingUpdate = await db.syncQueue
         .where({ setId })
         .filter((q) => q.action === 'update')
@@ -117,21 +118,17 @@ export async function updateSetFields(setId, fields) {
 
 // ——— Delete ———
 
-// Deletes a single set locally and, if it was synced, queues a delete-in-Notion job.
 export async function deleteSet(setId) {
   return db.transaction('rw', db.sets, db.syncQueue, async () => {
     const set = await db.sets.get(setId);
     if (!set) return;
 
-    // Drop any pending create/update jobs for this set — no point creating something
-    // we're about to delete, and no point updating a soon-to-be-gone row.
     await db.syncQueue.where({ setId }).delete();
 
-    // If the set was already pushed to Notion, enqueue a delete referencing the page id.
-    if (set.synced && set.notionPageId) {
+    if (set.synced && set.supabaseId) {
       await db.syncQueue.add({
-        setId, // kept for reference; ignored by the delete handler
-        notionPageId: set.notionPageId,
+        setId,
+        supabaseId: set.supabaseId,
         action: 'delete',
         attempts: 0,
         lastError: null,
@@ -143,8 +140,6 @@ export async function deleteSet(setId) {
   });
 }
 
-// Deletes every set in a session AND the session metadata row.
-// Queues individual Notion deletes for sets that were already synced.
 export async function deleteSession(sessionId) {
   const sets = await db.sets.where('sessionId').equals(sessionId).toArray();
   for (const s of sets) {
@@ -162,7 +157,6 @@ export async function getSetsForWeek(weekStartIso, weekEndIso) {
     .toArray();
 }
 
-// All sets for a given exercise, newest first — used by "last time" chip.
 export async function getLastSetsFor(exerciseName, limit = 6) {
   return db.sets
     .where('exerciseName').equals(exerciseName)
@@ -171,7 +165,6 @@ export async function getLastSetsFor(exerciseName, limit = 6) {
     .then((rows) => rows.slice(0, limit));
 }
 
-// Check whether a proposed set beats all prior top-set volumes for that exercise.
 export async function isPR(exerciseName, weight, reps) {
   const volume = weight * reps;
   if (volume <= 0) return false;
@@ -184,4 +177,5 @@ export async function clearAll() {
   await db.sets.clear();
   await db.sessions.clear();
   await db.syncQueue.clear();
+  await db.meta.clear();
 }

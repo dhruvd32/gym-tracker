@@ -48,7 +48,7 @@ export function HistoryScreen({ showToast }) {
 
 function SessionCard({ session, expanded, onToggle, showToast }) {
   async function handleDeleteSession() {
-    if (!window.confirm(`Delete this ${session.dayType} workout from ${session.date}?\nIt will also be removed from your Notion database.`)) return;
+    if (!window.confirm(`Delete this ${session.dayType} workout from ${session.date}?`)) return;
     await deleteSession(session.sessionId);
     flushSyncQueue();
     showToast('SESSION DELETED');
@@ -113,7 +113,7 @@ function HistorySetRow({ set, showToast }) {
   }
 
   async function remove() {
-    if (!window.confirm('Delete this set? It will also be removed from Notion.')) return;
+    if (!window.confirm('Delete this set?')) return;
     await deleteSet(set.id);
     flushSyncQueue();
     showToast('SET DELETED');

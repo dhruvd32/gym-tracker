@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Gym Tracker',
+        name: 'Gym Ledger',
         short_name: 'Gym',
-        description: 'PPL workout tracker — local-first, syncs to Notion',
+        description: 'PPL workout tracker — local-first, syncs to Supabase',
         theme_color: '#0a0a0a',
         background_color: '#0a0a0a',
         display: 'standalone',
@@ -31,8 +31,5 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    proxy: {
-      '/api': 'http://localhost:3001'
-    }
   }
 });

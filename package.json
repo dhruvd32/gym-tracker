@@ -1,16 +1,16 @@
 {
   "name": "gym-tracker-pwa",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Local-first gym tracker PWA — logs PPL workouts, syncs to Notion, heatmaps weekly muscle volume.",
+  "description": "Local-first gym tracker PWA — logs PPL workouts, syncs to Supabase, heatmaps weekly muscle volume.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "server": "node server/index.js"
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "dexie": "^4.0.8",
     "dexie-react-hooks": "^1.1.7",
     "react": "^18.3.1",
@@ -22,11 +22,5 @@
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.1",
     "vite-plugin-pwa": "^0.20.5"
-  },
-  "serverDependencies": {
-    "@notionhq/client": "^2.2.15",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
   }
 }
