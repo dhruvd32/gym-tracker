@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, deleteSet, deleteSession, updateSetFields } from '../data/db.js';
 import { flushSyncQueue } from '../data/sync.js';
+import { findExercise } from '../data/exerciseLibrary.js';
 
 // History screen — one row per workout session, tappable to expand.
 // Within an expanded session, each set row can have its weight/reps edited or
@@ -100,6 +101,9 @@ function HistorySetRow({ set, showToast }) {
   const [r, setR] = useState(String(set.reps));
   const [saving, setSaving] = useState(false);
 
+  const ex = findExercise(set.exerciseName);
+  const isTime = ex?.measureType === 'time';
+
   async function save() {
     const nw = Number(w);
     const nr = Number(r);
@@ -123,11 +127,13 @@ function HistorySetRow({ set, showToast }) {
     return (
       <div className={`logged-set ${set.isPR ? 'is-pr' : ''}`}>
         <span className="n">SET {set.setNumber}</span>
-        <span className="value tabular">{set.weight} kg × {set.reps}</span>
+        <span className="value tabular">
+          {set.weight} kg {isTime ? `for ${set.reps}s` : `× ${set.reps}`}
+        </span>
         <span className="row" style={{ gap: 6 }}>
           {set.isPR
             ? <span className="pr-badge">PR</span>
-            : <span className="n tabular muted">{set.weight * set.reps} kg·r</span>}
+            : <span className="n tabular muted">{set.weight * set.reps} kg·{isTime ? 's' : 'r'}</span>}
           <button className="mini-btn" onClick={() => setEditing(true)}>Edit</button>
           <button className="mini-btn danger" onClick={remove}>×</button>
         </span>

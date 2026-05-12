@@ -291,33 +291,37 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
         {draft.exercises.length === 0 ? (
           <div className="empty">No exercises added yet — tap below to start.</div>
         ) : (
-          draft.exercises.map((ex, i) => (
-            <div
-              key={i}
-              className="exercise"
-              onClick={() => { setEditIdx(i); setView('edit-sets'); }}
-            >
-              <div className="row spread">
-                <div className="exercise-name">{ex.name}</div>
-                <span className="n muted">{ex.sets.length} set{ex.sets.length === 1 ? '' : 's'}</span>
-              </div>
-              {ex.sets.length > 0 ? (
-                <div className="logged-sets">
-                  {ex.sets.map((s, j) => (
-                    <div key={j} className="logged-set">
-                      <span className="n">SET {j + 1}</span>
-                      <span className="value tabular">
-                        {s.weight} kg {ex.measureType === 'time' ? `for ${s.reps}s` : `× ${s.reps}`}
-                      </span>
-                      <span className="n tabular muted">{s.weight * s.reps} kg·{ex.measureType === 'time' ? 's' : 'r'}</span>
-                    </div>
-                  ))}
+          draft.exercises.map((ex, i) => {
+            const libEx = findExercise(ex.name);
+            const isTime = libEx?.measureType === 'time';
+            return (
+              <div
+                key={i}
+                className="exercise"
+                onClick={() => { setEditIdx(i); setView('edit-sets'); }}
+              >
+                <div className="row spread">
+                  <div className="exercise-name">{ex.name}</div>
+                  <span className="n muted">{ex.sets.length} set{ex.sets.length === 1 ? '' : 's'}</span>
                 </div>
-              ) : (
-                <div className="last-time muted">No sets yet — tap to add</div>
-              )}
-            </div>
-          ))
+                {ex.sets.length > 0 ? (
+                  <div className="logged-sets">
+                    {ex.sets.map((s, j) => (
+                      <div key={j} className="logged-set">
+                        <span className="n">SET {j + 1}</span>
+                        <span className="value tabular">
+                          {s.weight} kg {isTime ? `for ${s.reps}s` : `× ${s.reps}`}
+                        </span>
+                        <span className="n tabular muted">{s.weight * s.reps} kg·{isTime ? 's' : 'r'}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="last-time muted">No sets yet — tap to add</div>
+                )}
+              </div>
+            );
+          })
         )}
 
         <button
@@ -346,6 +350,9 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
 // ─────────────────────────────────────────────────────────────
 
 function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
+  const libEx = findExercise(exercise.name);
+  const isTime = libEx?.measureType === 'time';
+
   const last = exercise.sets[exercise.sets.length - 1];
   const seed = last
     ? { w: String(last.weight), r: String(last.reps) }
@@ -405,7 +412,7 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
             />
           </div>
           <div>
-            <label>{exercise.measureType === 'time' ? 'Time (s)' : 'Reps'}</label>
+            <label>{isTime ? 'Time (s)' : 'Reps'}</label>
             <input
               type="number" inputMode="numeric" step="1" min="1"
               value={reps}
@@ -424,7 +431,7 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
               key={i}
               index={i}
               set={s}
-              isTime={exercise.measureType === 'time'}
+              isTime={isTime}
               onChange={(fields) => updateSetAt(i, fields)}
               onRemove={() => removeSetAt(i)}
             />
