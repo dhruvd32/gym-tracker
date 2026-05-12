@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { supabase, signOut } from './data/supabase.js';
+import { auth, signOut, onAuthStateChanged, getRedirectResult } from './data/firebase.js';
 import { AuthScreen } from './components/AuthScreen.jsx';
 import { LogScreen } from './components/LogScreen.jsx';
 import { HeatmapScreen } from './components/HeatmapScreen.jsx';
 import { HistoryScreen } from './components/HistoryScreen.jsx';
-import { flushSyncQueue, installSyncTriggers, onSyncStateChange, pullFromSupabase } from './data/sync.js';
+import { flushSyncQueue, installSyncTriggers, onSyncStateChange, pullFromFirestore } from './data/sync.js';
 
 export default function App() {
   // undefined = checking auth, null = signed out, object = signed in
-  const [session, setSession] = useState(undefined);
+  const [user, setUser] = useState(undefined);
   const [tab, setTab] = useState('log');
   const [toast, setToast] = useState(null);
   const [syncState, setSyncState] = useState({ status: 'idle', pending: 0 });
@@ -16,20 +16,19 @@ export default function App() {
 
   // Auth state — runs once on mount
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    // Handle the redirect result from Google OAuth (no-op if no pending redirect).
+    getRedirectResult(auth).catch((err) => console.error('Auth redirect error:', err));
+
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   // Data sync — runs whenever the signed-in user changes
   useEffect(() => {
-    if (!session?.user) return;
+    if (!user) return;
 
     const off = onSyncStateChange((s) => setSyncState(s));
 
@@ -38,12 +37,12 @@ export default function App() {
       triggersInstalled.current = true;
     }
 
-    pullFromSupabase()
+    pullFromFirestore()
       .then(() => flushSyncQueue())
       .catch(console.error);
 
     return () => off();
-  }, [session?.user?.id]);
+  }, [user?.uid]);
 
   function showToast(msg) {
     setToast(msg);
@@ -52,7 +51,7 @@ export default function App() {
   }
 
   // Loading
-  if (session === undefined) {
+  if (user === undefined) {
     return (
       <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span className="muted" style={{ letterSpacing: '0.12em', fontSize: 12, textTransform: 'uppercase' }}>
@@ -63,7 +62,7 @@ export default function App() {
   }
 
   // Not authenticated
-  if (!session) return <AuthScreen />;
+  if (!user) return <AuthScreen />;
 
   const syncLabel =
     syncState.status === 'idle'    ? 'Synced'                           :

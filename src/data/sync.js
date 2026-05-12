@@ -1,4 +1,17 @@
-import { supabase } from './supabase.js';
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore';
+import { auth, firestore } from './firebase.js';
 import {
   db,
   markSetSynced,
@@ -18,47 +31,48 @@ function emit(state) {
   for (const cb of listeners) cb(state);
 }
 
-// Pull sets from Supabase and merge into IndexedDB.
+function userSetsCollection(userId) {
+  return collection(firestore, 'users', userId, 'workout_sets');
+}
+
+// Pull sets from Firestore and merge into IndexedDB.
 // First call is a full sync (no lastSyncAt). Subsequent calls are delta syncs.
-export async function pullFromSupabase() {
-  const { data: { user } } = await supabase.auth.getUser();
+export async function pullFromFirestore() {
+  const user = auth.currentUser;
   if (!user) return;
 
   const lastSyncMeta = await db.meta.get('lastSyncAt');
   const lastSyncAt = lastSyncMeta?.value;
 
-  let query = supabase
-    .from('workout_sets')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true });
+  const col = userSetsCollection(user.uid);
+  const q = lastSyncAt
+    ? query(col, where('updated_at', '>', Timestamp.fromDate(new Date(lastSyncAt))), orderBy('updated_at', 'asc'))
+    : query(col, orderBy('created_at', 'asc'));
 
-  if (lastSyncAt) {
-    query = query.gt('updated_at', lastSyncAt);
+  const snap = await getDocs(q);
+  if (snap.empty) {
+    await db.meta.put({ key: 'lastSyncAt', value: new Date().toISOString() });
+    return;
   }
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  if (!data?.length) return;
-
   await db.transaction('rw', db.sets, db.sessions, async () => {
-    for (const row of data) {
-      const mapped = fromSupabase(row);
-      const local = await db.sets.where('supabaseId').equals(row.id).first();
+    for (const docSnap of snap.docs) {
+      const row = docSnap.data();
+      const mapped = fromFirestore(docSnap.id, row);
+      const local = await db.sets.where('remoteId').equals(docSnap.id).first();
       if (local) {
         await db.sets.update(local.id, mapped);
       } else {
         await db.sets.add(mapped);
       }
 
-      // Derive session record from set if not already present.
       const sessionExists = await db.sessions.where('sessionId').equals(row.session_id).first();
       if (!sessionExists) {
         await db.sessions.add({
           sessionId: row.session_id,
           date: row.date,
           dayType: row.day_type,
-          startedAt: row.created_at,
+          startedAt: tsToIso(row.created_at),
         });
       }
     }
@@ -75,7 +89,7 @@ export async function flushSyncQueue() {
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = auth.currentUser;
   if (!user) return;
 
   running = true;
@@ -91,11 +105,11 @@ export async function flushSyncQueue() {
     for (const job of queue) {
       try {
         if (job.action === 'delete') {
-          await handleDelete(job);
+          await handleDelete(job, user.uid);
         } else if (job.action === 'update') {
-          await handleUpdate(job, user.id);
+          await handleUpdate(job, user.uid);
         } else {
-          await handleCreate(job, user.id);
+          await handleCreate(job, user.uid);
         }
       } catch (err) {
         await bumpSyncAttempt(job.id, err?.message || String(err));
@@ -115,45 +129,39 @@ async function handleCreate(job, userId) {
     return;
   }
 
-  const { data, error } = await supabase
-    .from('workout_sets')
-    .insert(toSupabase(set, userId))
-    .select('id')
-    .single();
-
-  if (error) throw new Error(error.message);
-  await markSetSynced(set.id, data.id);
+  const ref = await addDoc(userSetsCollection(userId), {
+    ...toFirestore(set),
+    created_at: serverTimestamp(),
+    updated_at: serverTimestamp(),
+  });
+  await markSetSynced(set.id, ref.id);
 }
 
 async function handleUpdate(job, userId) {
   const set = await db.sets.get(job.setId);
-  if (!set || !set.supabaseId) {
+  if (!set || !set.remoteId) {
     await clearSyncQueueItem(job.id);
     return;
   }
 
-  const { error } = await supabase
-    .from('workout_sets')
-    .update({ weight_kg: set.weight, reps: set.reps, is_pr: !!set.isPR })
-    .eq('id', set.supabaseId)
-    .eq('user_id', userId);
-
-  if (error) throw new Error(error.message);
+  const ref = doc(firestore, 'users', userId, 'workout_sets', set.remoteId);
+  await updateDoc(ref, {
+    weight_kg: set.weight,
+    reps:      set.reps,
+    is_pr:     !!set.isPR,
+    updated_at: serverTimestamp(),
+  });
   await clearSyncQueueItem(job.id);
 }
 
-async function handleDelete(job) {
-  if (!job.supabaseId) {
+async function handleDelete(job, userId) {
+  if (!job.remoteId) {
     await clearSyncQueueItem(job.id);
     return;
   }
 
-  const { error } = await supabase
-    .from('workout_sets')
-    .delete()
-    .eq('id', job.supabaseId);
-
-  if (error) throw new Error(error.message);
+  const ref = doc(firestore, 'users', userId, 'workout_sets', job.remoteId);
+  await deleteDoc(ref);
   await clearSyncQueueItem(job.id);
 }
 
@@ -167,9 +175,8 @@ export function installSyncTriggers() {
 
 // ─── Transform helpers ────────────────────────────────────────────────────────
 
-function toSupabase(set, userId) {
+function toFirestore(set) {
   return {
-    user_id:       userId,
     session_id:    set.sessionId,
     date:          set.date,
     day_type:      set.dayType,
@@ -185,9 +192,9 @@ function toSupabase(set, userId) {
   };
 }
 
-function fromSupabase(row) {
+function fromFirestore(id, row) {
   return {
-    supabaseId:    row.id,
+    remoteId:      id,
     sessionId:     row.session_id,
     date:          row.date,
     dayType:       row.day_type,
@@ -201,7 +208,13 @@ function fromSupabase(row) {
     reps:          row.reps,
     isPR:          row.is_pr,
     synced:        1,
-    createdAt:     row.created_at,
-    syncedAt:      row.updated_at,
+    createdAt:     tsToIso(row.created_at),
+    syncedAt:      tsToIso(row.updated_at),
   };
+}
+
+function tsToIso(ts) {
+  if (!ts) return undefined;
+  if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+  return new Date(ts).toISOString();
 }

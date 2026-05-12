@@ -21,9 +21,6 @@ db.version(2).stores({
 });
 
 // v3 — switch backend from Notion to Supabase.
-// `supabaseId` replaces `notionPageId` on sets and syncQueue delete jobs.
-// `meta` table stores lastSyncAt and other key/value bookkeeping.
-// All local data is cleared; it will be re-pulled from Supabase on first login.
 db.version(3).stores({
   sets:      '++id, sessionId, date, exerciseName, dayType, primaryGroup, primarySub, synced, supabaseId',
   sessions:  '++id, &sessionId, date, dayType',
@@ -33,6 +30,21 @@ db.version(3).stores({
   await tx.table('sets').clear();
   await tx.table('sessions').clear();
   await tx.table('syncQueue').clear();
+});
+
+// v4 — switch backend from Supabase to Firebase.
+// `remoteId` replaces `supabaseId` (backend-agnostic name).
+// All local data is cleared; it will be re-pulled from Firestore on first login.
+db.version(4).stores({
+  sets:      '++id, sessionId, date, exerciseName, dayType, primaryGroup, primarySub, synced, remoteId',
+  sessions:  '++id, &sessionId, date, dayType',
+  syncQueue: '++id, setId, action, attempts, lastError',
+  meta:      'key',
+}).upgrade(async (tx) => {
+  await tx.table('sets').clear();
+  await tx.table('sessions').clear();
+  await tx.table('syncQueue').clear();
+  await tx.table('meta').clear();
 });
 
 // ——— Creation ———
@@ -63,10 +75,10 @@ export async function addSet(payload) {
 
 // ——— Sync bookkeeping ———
 
-export async function markSetSynced(setId, supabaseId) {
+export async function markSetSynced(setId, remoteId) {
   await db.sets.update(setId, {
     synced: 1,
-    supabaseId: supabaseId || undefined,
+    remoteId: remoteId || undefined,
     syncedAt: new Date().toISOString(),
   });
   await db.syncQueue.where({ setId }).delete();
@@ -98,7 +110,7 @@ export async function updateSetFields(setId, fields) {
     if (!set) return;
     await db.sets.update(setId, fields);
 
-    if (set.synced && set.supabaseId) {
+    if (set.synced && set.remoteId) {
       const existingUpdate = await db.syncQueue
         .where({ setId })
         .filter((q) => q.action === 'update')
@@ -125,10 +137,10 @@ export async function deleteSet(setId) {
 
     await db.syncQueue.where({ setId }).delete();
 
-    if (set.synced && set.supabaseId) {
+    if (set.synced && set.remoteId) {
       await db.syncQueue.add({
         setId,
-        supabaseId: set.supabaseId,
+        remoteId: set.remoteId,
         action: 'delete',
         attempts: 0,
         lastError: null,

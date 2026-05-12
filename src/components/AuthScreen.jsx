@@ -1,5 +1,5 @@
 import React from 'react';
-import { signInWithGoogle } from '../data/supabase.js';
+import { signInWithGoogle } from '../data/firebase.js';
 
 export function AuthScreen() {
   return (
