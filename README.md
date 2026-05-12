@@ -1,6 +1,6 @@
 # gym.ledger
 
-A personal gym-tracking PWA for Push / Pull / Legs / Core workouts. Builds a full session locally, commits the whole workout in one tap, and syncs every set to a Supabase (Postgres) database — accessible from any device, any browser, without ever losing history.
+A personal gym-tracking PWA for Push / Pull / Legs / Core workouts. Builds a full session locally, commits the whole workout in one tap, and syncs every set to Firebase Firestore — accessible from any device, any browser, without losing history.
 
 ---
 
@@ -8,11 +8,11 @@ A personal gym-tracking PWA for Push / Pull / Legs / Core workouts. Builds a ful
 
 - **Session builder** — pick a day type, add exercises and sets, tap **Log Day** once to commit. An in-progress session persists to `localStorage` so you won't lose it if the tab closes mid-workout.
 - **PR detection** — automatically flags a set as a personal record when its `weight × reps` beats every prior set for that exercise.
-- **Supabase sync** — every logged set is queued and pushed to Postgres in the background. Edits and deletions propagate the same way.
+- **Firestore sync** — every logged set is queued and pushed to Firestore in the background. Edits and deletions propagate the same way.
 - **History** — reverse-chronological list of every session. Expand to see sets; edit weight/reps or delete individual sets / whole sessions.
 - **Muscle heatmap** — weekly front/back body SVG graded by total tonnage per muscle group.
 - **Works offline** — writes happen to IndexedDB first; the sync queue drains when connectivity returns.
-- **Multi-device** — log on your phone, check history on your laptop. Data lives in Supabase, not the browser.
+- **Multi-device** — log on your phone, check history on your laptop. Source of truth lives in Firestore, not the browser.
 - **Installable** — ships as a PWA. Chrome/Safari offer "Add to Home screen"; the app launches standalone.
 
 ---
@@ -27,96 +27,105 @@ A personal gym-tracking PWA for Push / Pull / Legs / Core workouts. Builds a ful
 │  localStorage       ← draft session     │
 │  syncQueue          ← write outbox      │
 └──────────────────┬──────────────────────┘
-                   │  Supabase JS client
+                   │  Firebase JS SDK
                    │  (HTTPS, direct — no proxy)
                    ▼
 ┌─────────────────────────────────────────┐
-│  Supabase (hosted Postgres)             │
+│  Firebase (Google Cloud)                │
 │                                         │
-│  Auth     — Google OAuth 2.0            │
-│  Database — workout_sets table          │
-│  RLS      — users see only their rows   │
+│  Auth      — Google OAuth via Firebase  │
+│  Firestore — users/{uid}/workout_sets/  │
+│  Rules     — users see only their docs  │
 └─────────────────────────────────────────┘
 ```
 
-**Hosting:** Cloudflare Pages (static site, free tier, stable `*.pages.dev` domain)  
-**Database:** Supabase free tier (500 MB Postgres, unlimited auth)  
-**Auth:** Supabase Auth with Google OAuth 2.0 — no passwords stored anywhere
+**Hosting:** Cloudflare Pages (static, free, stable `*.pages.dev` domain)
+**Database:** Firebase Firestore (Spark / free tier — 50k reads, 20k writes per day)
+**Auth:** Firebase Authentication with Google sign-in — no passwords stored anywhere
 
 ---
 
 ## Why each technology was chosen
 
 ### React + Vite
-Standard, fast SPA toolchain. Vite's build times are near-instant. No framework lock-in — the app is plain React with no router, no state library.
+Standard, fast SPA toolchain. Vite's build times are near-instant. No framework lock-in — plain React, no router, no state library.
 
 ### Dexie (IndexedDB) — local cache
 All writes go to IndexedDB first via [Dexie.js](https://dexie.org):
 - Logging a set is **instant** — no waiting for a network round-trip.
 - The app is **fully usable offline** at the gym with no signal.
-- Data is **never lost** if Supabase is unreachable.
+- Data is **never lost** if Firestore is unreachable.
 
-IndexedDB is now a **read-through cache**, not the source of truth. On login, the app pulls from Supabase and populates IndexedDB. Subsequent visits use IndexedDB instantly, then delta-sync from Supabase in the background.
+IndexedDB is a **read-through cache**, not the source of truth. On login, the app pulls from Firestore and populates IndexedDB. Subsequent visits use IndexedDB instantly, then delta-sync from Firestore in the background.
 
-### Supabase — database + auth
-[Supabase](https://supabase.com) is an open-source Firebase alternative built on Postgres. Chosen because:
-- **One service, two problems solved** — auth (Google OAuth) and database (Postgres) in a single free-tier project.
-- **Row Level Security (RLS)** — a Postgres policy enforces that every query is automatically filtered to `WHERE user_id = auth.uid()`. Users can never see each other's data, even if they tried.
-- **Anon key is safe to ship in the frontend** — the key has no power beyond what RLS allows. There is no server-side proxy needed.
-- **Free tier scales** — 500 MB Postgres, unlimited auth users, 2 GB bandwidth. Plenty for a personal tracker growing to dozens of users.
-- **Open source** — can be self-hosted on any VPS if the hosted free tier is ever discontinued.
+### Firebase — auth + database
+[Firebase](https://firebase.google.com) was chosen after an extended battle with Supabase's OAuth flow that we couldn't resolve. Firebase's tradeoffs for this app:
+- **Bulletproof Google OAuth** — Firebase IS Google's identity stack. The OAuth dance is invisible: `signInWithRedirect(auth, googleProvider)`.
+- **Auth + database in one project** — no separate services to wire up.
+- **Security rules enforce isolation** — Firestore rules pin every read/write to `request.auth.uid`, so users can only see their own documents.
+- **Free tier is generous for personal use** — 50k Firestore reads, 20k writes, 1 GiB storage per day. A single user logs ~50 writes/week.
+- **Web config is safe to ship in the frontend** — the API key is a public identifier, not a secret. Security rules do the actual access control.
 
-### Supabase Auth — Google OAuth
-Google OAuth was chosen over email/password because:
-- No password management (no reset flows, no hashing, no breaches).
-- Users already have a Google account.
-- Supabase wraps the entire OAuth dance — the app only calls `signInWithOAuth({ provider: 'google' })`.
+**Tradeoff:** Firebase is not open-source. If you want strictly open-source, swap to [Pocketbase](https://pocketbase.io) (self-hostable, SQLite-backed, has built-in Google OAuth).
+
+### Firebase Auth — Google sign-in via popup
+The app uses `signInWithPopup` because Chrome's third-party storage partitioning breaks `signInWithRedirect` (the auth state is lost during the cross-origin redirect chain through `firebaseapp.com`). Popup-based auth keeps everything in the same origin context and works reliably.
 
 ### Cloudflare Pages — hosting
 - **Free, unlimited** static hosting.
-- **Stable domain** — `gym-tracker-jc4.pages.dev` never changes between deployments. Each commit gets its own preview URL (e.g. `abc123.gym-tracker-jc4.pages.dev`) but the production domain is permanent.
-- **Auto-deploy** — every push to `master` triggers a build and deploy.
-- **No Cloudflare Functions needed anymore** — previously the app used Pages Functions as a proxy to Notion (to hide the Notion token). With Supabase, the anon key is designed to be public and RLS replaces server-side access control. The proxy layer was removed entirely.
+- **Stable domain** — `gym-tracker-jc4.pages.dev` never changes. Each commit gets its own preview URL but the production domain is permanent.
+- **Auto-deploy** — every push to `master` triggers a build.
+- **No server-side code needed** — Firebase JS SDK talks directly to Firebase from the browser. Cloudflare just serves static assets.
 
 ### PWA (vite-plugin-pwa + Workbox)
 - Precaches all static assets so the app loads instantly on repeat visits.
-- Enables "Add to Home screen" on iOS and Android — the app launches fullscreen, no browser chrome.
-- The service worker handles asset caching only; it does not intercept API calls to Supabase.
+- Enables "Add to Home screen" — the app launches fullscreen, no browser chrome.
+- The service worker handles asset caching only; it does not intercept calls to Firebase.
 
 ---
 
 ## Data model
 
-### Supabase (Postgres) — source of truth
+### Firestore — source of truth
 
-```sql
-workout_sets (
-  id            UUID        PRIMARY KEY  -- Supabase-generated
-  user_id       UUID        → auth.users -- RLS key
-  session_id    TEXT        -- groups sets into a workout session
-  date          DATE
-  day_type      TEXT        -- Push | Pull | Legs | Core
-  exercise_name TEXT
-  primary_group TEXT        -- major muscle group
-  primary_sub   TEXT        -- sub-muscle
-  primary_pct   NUMERIC     -- % of tonnage credited to primary muscle
-  compound      BOOLEAN
-  set_number    INTEGER
-  weight_kg     NUMERIC
-  reps          INTEGER
-  is_pr         BOOLEAN
-  created_at    TIMESTAMPTZ
-  updated_at    TIMESTAMPTZ -- auto-bumped by trigger on UPDATE
-)
+Documents live under a per-user subcollection so security rules are trivial:
+
+```
+users/{uid}/workout_sets/{setId}
+  session_id     string   — groups sets into a workout session
+  date           string   — ISO date (YYYY-MM-DD)
+  day_type       string   — "Push" | "Pull" | "Legs" | "Core"
+  exercise_name  string
+  primary_group  string   — major muscle group
+  primary_sub    string   — sub-muscle
+  primary_pct    number   — % of tonnage credited to primary muscle
+  compound       boolean
+  set_number     number
+  weight_kg      number
+  reps           number
+  is_pr          boolean
+  created_at     timestamp  — serverTimestamp() on create
+  updated_at     timestamp  — serverTimestamp() on every write
 ```
 
-RLS policy: `FOR ALL USING (auth.uid() = user_id)` — one policy covers SELECT, INSERT, UPDATE, DELETE.
+Security rule (paste into Firestore → Rules tab):
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/workout_sets/{setId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
 ### IndexedDB / Dexie — local cache
 
 | Table | Purpose |
 |---|---|
-| `sets` | Mirror of `workout_sets`. `supabaseId` stores the remote UUID. `synced` flag tracks push status. |
+| `sets` | Mirror of `workout_sets`. `remoteId` stores the Firestore document ID. `synced` flag tracks push status. |
 | `sessions` | Derived from sets — used to group the History view. |
 | `syncQueue` | Write outbox. Each row has an `action` (`create` / `update` / `delete`) and retries with backoff. |
 | `meta` | Key/value store. Holds `lastSyncAt` ISO timestamp for delta syncs. |
@@ -124,46 +133,47 @@ RLS policy: `FOR ALL USING (auth.uid() = user_id)` — one policy covers SELECT,
 ### Schema versions
 - **v1** — initial (sets, sessions, syncQueue)
 - **v2** — syncQueue gains `action` field; sets gain `notionPageId` (Notion era)
-- **v3** — switched to Supabase: `notionPageId` → `supabaseId`, added `meta` table, local data cleared on upgrade (re-pulled from Supabase on login)
+- **v3** — switched to Supabase: `notionPageId` → `supabaseId`, added `meta` table
+- **v4** — switched to Firebase: `supabaseId` → `remoteId` (backend-agnostic name), local data cleared on upgrade (re-pulled from Firestore on login)
 
 ---
 
 ## Sync engine
 
-### Write path (local → Supabase)
+### Write path (local → Firestore)
 
 ```
 User logs set
   → write to IndexedDB (instant, optimistic)
   → add 'create' job to syncQueue
   → flushSyncQueue() fires
-      → supabase.from('workout_sets').insert(...)
-      → on success: mark set synced, store supabaseId
+      → addDoc(users/{uid}/workout_sets, {...})
+      → on success: mark set synced, store remoteId
       → on failure: bump attempt counter, retry next flush
 ```
 
 The flusher is **single-flight** (concurrent calls are no-ops), and is triggered:
-- On app mount
+- On app mount (after auth)
 - After every write
 - On `online` event (device reconnects)
 - On `visibilitychange` (user returns to tab)
 - Every 60 seconds
 
-### Read path (Supabase → local)
+### Read path (Firestore → local)
 
 ```
-User logs in
-  → pullFromSupabase()
+User signs in
+  → pullFromFirestore()
       → read lastSyncAt from meta table
-      → if first login: fetch ALL sets for user
-      → if returning: fetch sets WHERE updated_at > lastSyncAt (delta)
-      → upsert into IndexedDB (match by supabaseId)
+      → if first login: fetch ALL sets in users/{uid}/workout_sets
+      → if returning: fetch where updated_at > lastSyncAt (delta)
+      → upsert into IndexedDB (match by remoteId)
       → derive session records from sets
       → update lastSyncAt = now()
   → flushSyncQueue() (push any pending local writes)
 ```
 
-**Conflict resolution:** last write wins on `updated_at`. Since this is a single-user app, conflicts only arise from simultaneous edits on two devices — a very rare edge case.
+**Conflict resolution:** last write wins on `updated_at`. Since this is a single-user app, conflicts only arise from simultaneous edits on two devices — a rare edge case.
 
 ---
 
@@ -171,21 +181,19 @@ User logs in
 
 ```
 1. User opens app
-2. Supabase checks for existing session (localStorage token)
-3a. Session found → skip to step 7
+2. Firebase checks for existing session (IndexedDB-backed by Firebase SDK)
+3a. Session found → onAuthStateChanged fires with user → skip to step 7
 3b. No session → show AuthScreen
 4. User clicks "Continue with Google"
-5. supabase.auth.signInWithOAuth({ provider: 'google' })
-   → Supabase redirects to Google
-   → Google authenticates user
-   → Google redirects to: https://<ref>.supabase.co/auth/v1/callback
-   → Supabase exchanges code for tokens, redirects to app
-6. App receives session via onAuthStateChange listener
-7. pullFromSupabase() loads user's data into IndexedDB
-8. App renders — IndexedDB powers all UI
+5. signInWithPopup(auth, googleProvider)
+   → Popup opens to Google sign-in
+   → User authenticates on Google
+   → Popup closes, promise resolves with signed-in user
+7. onAuthStateChanged fires → setUser(user) → App renders LogScreen
+8. pullFromFirestore() loads user's data into IndexedDB
 ```
 
-Session tokens are stored in `localStorage` by the Supabase JS client and refreshed automatically.
+Session persistence is handled by the Firebase SDK (IndexedDB-backed by default on web).
 
 ---
 
@@ -193,94 +201,68 @@ Session tokens are stored in `localStorage` by the Supabase JS client and refres
 
 ### Prerequisites
 - Node.js 18+
-- A Supabase project (free at [supabase.com](https://supabase.com))
-- A Google Cloud OAuth 2.0 client (free at [console.cloud.google.com](https://console.cloud.google.com))
+- A free Firebase project ([console.firebase.google.com](https://console.firebase.google.com))
 
-### 1. Supabase — create the table
+### 1. Create the Firebase project
 
-In Supabase → SQL Editor, run the contents of [`supabase/schema.sql`](supabase/schema.sql). This creates the `workout_sets` table, indexes, RLS policy, and the `updated_at` trigger.
+1. Firebase Console → **Add project** → name it (e.g. "gym-ledger"). Skip Analytics.
+2. After it's created, click the **`</>`** icon to add a **web app**. Register with any nickname.
+3. On the next screen, copy the `firebaseConfig` object — the 6 values go into Cloudflare Pages env vars (step 4).
 
-### 2. Supabase — enable Google OAuth
+### 2. Enable Google sign-in
 
-In Supabase → Authentication → Providers → Google:
-- Paste your Google **Client ID** and **Client Secret**
-- Enable the toggle → Save
+1. Sidebar → **Authentication** → **Get started**
+2. Sign-in providers → **Google** → toggle **Enable**
+3. Set a support email → **Save**
+4. Settings tab → **Authorized domains** → **Add domain** → `gym-tracker-jc4.pages.dev` (and any preview/custom domains)
 
-In Supabase → Authentication → URL Configuration:
-- **Site URL:** `https://gym-tracker-jc4.pages.dev`
-- **Redirect URLs:** `https://gym-tracker-jc4.pages.dev/**`
+### 3. Create the Firestore database
 
-### 3. Google Cloud Console — OAuth client
-
-In [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID:
-- Application type: **Web application**
-- Authorized redirect URIs: `https://<supabase-ref>.supabase.co/auth/v1/callback`
-- Authorized JavaScript origins: `https://gym-tracker-jc4.pages.dev`
-
-In OAuth consent screen → add your Google email as a **Test user** (required while app is in Testing mode).
-
-> Note: Google credential changes can take up to a few hours to propagate.
+1. Sidebar → **Firestore Database** → **Create database**
+2. **Production mode** (rules added next)
+3. Pick a region close to you (e.g. `asia-south1` for India). **This is permanent.**
+4. Rules tab → replace with:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{userId}/workout_sets/{setId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
+   ```
+5. **Publish**.
 
 ### 4. Local development
 
 ```bash
 npm install
 
-# Copy env template and fill in your Supabase credentials
 cp .env.example .env.local
-# VITE_SUPABASE_URL=https://<ref>.supabase.co
-# VITE_SUPABASE_ANON_KEY=eyJ...
+# Paste the 6 Firebase values from step 1
 
 npm run dev
 # → http://localhost:5173
 ```
 
+For local dev, also add `localhost` to Firebase Authentication → Authorized domains.
+
 ### 5. Deploy to Cloudflare Pages
 
-1. Push repo to GitHub
-2. Cloudflare Pages → Connect to Git → select repo
+1. Push repo to GitHub.
+2. Cloudflare Pages → Connect to Git → select repo.
 3. Build command: `npm run build` / Output: `dist`
-4. Environment Variables:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-5. Save and Deploy → `https://gym-tracker-jc4.pages.dev`
+4. Environment Variables (all on **Production**):
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
+5. Save and Deploy → `https://gym-tracker-jc4.pages.dev`.
 
 Every push to `master` auto-redeploys. The domain never changes.
-
----
-
-## Migrating from the old Notion-based version
-
-The v3 IndexedDB upgrade clears local data automatically (it will be re-pulled from Supabase). To migrate your Notion workout history into Supabase:
-
-### 1. Log in to the new app first
-
-Open `https://gym-tracker-jc4.pages.dev`, sign in with Google. Your user UUID appears in Supabase → Authentication → Users.
-
-### 2. Set up migration credentials
-
-```bash
-cp scripts/.env.example scripts/.env
-# Fill in:
-#   NOTION_TOKEN           — your old Notion integration secret
-#   NOTION_WORKOUT_DB_ID   — c2045ab8-72f1-4b10-a538-be33008af84b
-#   SUPABASE_URL           — https://<ref>.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY — from Supabase → Settings → API
-#   USER_ID                — your UUID from step 1
-```
-
-### 3. Run the migration
-
-```bash
-npm install @notionhq/client @supabase/supabase-js dotenv --prefix scripts
-node scripts/migrate-from-notion.mjs
-```
-
-The script paginates through all Notion pages (100 at a time), transforms each row to the Supabase schema, and batch-inserts them. It prints progress and a summary when done.
-
-### 4. Refresh the app
-
-Pull-to-refresh or close and reopen — all history loads from Supabase.
 
 ---
 
@@ -290,9 +272,9 @@ Pull-to-refresh or close and reopen — all history loads from Supabase.
 2. Tap **+ Add Exercise** → pick sub-muscle → pick exercise.
 3. Enter weight + reps → **+ Set**. Inputs retain the last values (same weight next set is common).
 4. **← Back to session** → add another exercise or keep adding sets.
-5. **Log Day · N sets** — commits to IndexedDB and queues sync to Supabase. Toast confirms.
+5. **Log Day · N sets** — commits to IndexedDB and queues sync to Firestore. Toast confirms.
 6. **Heatmap tab** — weekly volume visualised as a body SVG. Navigate weeks with ← →.
-7. **History tab** — all sessions, newest first. Expand → edit/delete sets → changes sync to Supabase.
+7. **History tab** — all sessions, newest first. Expand → edit/delete sets → changes sync to Firestore.
 
 The sync chip in the header shows `Synced` / `Syncing…` / `N pending` / `Offline`.
 
@@ -318,24 +300,19 @@ src/
   App.jsx                    Auth gate + tab switcher + sync chip + toast
   styles.css                 All CSS — dark charcoal / bone / crimson
   data/
-    supabase.js              Supabase client singleton + signInWithGoogle / signOut
-    db.js                    Dexie schema (v3) + CRUD helpers
-    sync.js                  Sync engine: flushSyncQueue + pullFromSupabase
+    firebase.js              Firebase app init + auth + Firestore singleton
+    db.js                    Dexie schema (v4) + CRUD helpers
+    sync.js                  Sync engine: flushSyncQueue + pullFromFirestore
     draft.js                 localStorage-backed in-progress session
     volume.js                Tonnage math, week helpers, heatmap grading
     exerciseLibrary.js       ~60 exercises with primary/secondary muscle %
   components/
-    AuthScreen.jsx           Google sign-in screen (shown when not logged in)
+    AuthScreen.jsx           Google sign-in screen
     LogScreen.jsx            Day → sub-muscle → exercise → Session Builder → Log Day
     HeatmapScreen.jsx        Week nav + body SVG + muscle breakdown list
     BodyHeatmap.jsx          Front + back SVG silhouettes with muscle colouring
     HistoryScreen.jsx        Session list, expand, edit/delete sets and sessions
-supabase/
-  schema.sql                 Run once in Supabase SQL Editor to create table + RLS
-scripts/
-  migrate-from-notion.mjs   One-time Notion → Supabase data migration
-  .env.example              Credentials template for the migration script
-.env.example                Vite env template (VITE_SUPABASE_URL / ANON_KEY)
+.env.example                 Firebase env template (6 VITE_FIREBASE_* vars)
 ```
 
 ---
@@ -343,8 +320,8 @@ scripts/
 ## Known gaps / future work
 
 - **Core Day** is under-seeded — add Core exercises to [`exerciseLibrary.js`](src/data/exerciseLibrary.js).
-- **RPE / set quality** isn't captured. Add a `rpe` column to `workout_sets` and a number input to the set row.
+- **RPE / set quality** isn't captured. Add an `rpe` field and a number input to the set row.
 - **PR detection** is tonnage-based (`weight × reps`). For 1RM-style PRs, swap `isPR()` in [`db.js`](src/data/db.js).
 - **Bodyweight sets** log with `weight = 0` → zero tonnage. Enter your body mass to make bodyweight volume count.
-- **Sync deduplication** — the queue is idempotent client-side, but a network timeout after a successful Supabase insert could cause a duplicate `create` attempt. Mitigation: add a `(user_id, session_id, set_number, exercise_name)` unique constraint to `workout_sets`.
-- **Multi-user** — the schema and RLS already support multiple users. Adding new users just requires sharing the app URL; each person logs in with their own Google account and sees only their data.
+- **Sync deduplication** — the queue is idempotent client-side, but a network timeout after a successful Firestore write could cause a duplicate `create`. Mitigation: include a deterministic ID derived from `(session_id, set_number, exercise_name)` and use `setDoc` instead of `addDoc`.
+- **Multi-user** — the per-user subcollection layout already supports multiple users. Anyone with a Google account can use the deployed app; each user sees only their own documents.

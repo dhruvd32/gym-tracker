@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { auth, signOut, onAuthStateChanged, getRedirectResult } from './data/firebase.js';
+import { auth, signOut, onAuthStateChanged } from './data/firebase.js';
 import { AuthScreen } from './components/AuthScreen.jsx';
 import { LogScreen } from './components/LogScreen.jsx';
 import { HeatmapScreen } from './components/HeatmapScreen.jsx';
@@ -16,9 +16,6 @@ export default function App() {
 
   // Auth state — runs once on mount
   useEffect(() => {
-    // Handle the redirect result from Google OAuth (no-op if no pending redirect).
-    getRedirectResult(auth).catch((err) => console.error('Auth redirect error:', err));
-
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
     });
