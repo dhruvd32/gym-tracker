@@ -60,7 +60,7 @@ IndexedDB is a **read-through cache**, not the source of truth. On login, the ap
 
 ### Firebase — auth + database
 [Firebase](https://firebase.google.com) was chosen after an extended battle with Supabase's OAuth flow that we couldn't resolve. Firebase's tradeoffs for this app:
-- **Bulletproof Google OAuth** — Firebase IS Google's identity stack. The OAuth dance is invisible: `signInWithRedirect(auth, googleProvider)`.
+- **Bulletproof Google OAuth** — Firebase IS Google's identity stack. The OAuth dance is invisible: `signInWithPopup(auth, googleProvider)`.
 - **Auth + database in one project** — no separate services to wire up.
 - **Security rules enforce isolation** — Firestore rules pin every read/write to `request.auth.uid`, so users can only see their own documents.
 - **Free tier is generous for personal use** — 50k Firestore reads, 20k writes, 1 GiB storage per day. A single user logs ~50 writes/week.
