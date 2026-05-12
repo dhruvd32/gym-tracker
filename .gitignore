@@ -5,3 +5,5 @@ dist/
 scripts/.env
 .DS_Store
 *.log
+.venv/
+.claude/settings.local.json
