@@ -1,10 +1,10 @@
-// Seeded from Notion Gym Tracking pages (Push/Pull/Legs).
-// Primary % + Secondary % are used to distribute tonnage (Weight × Reps)
+// Seeded from Notion Gym Tracking pages (Push/Pull/Legs/Core).
+// Primary % + Secondary % are used to distribute tonnage (Weight x Reps)
 // across muscle groups and sub-muscles for the heatmap.
 //
 // Schema per row:
 //   name            — canonical exercise name
-//   day             — 'Push' | 'Pull' | 'Legs'
+//   day             — 'Push' | 'Pull' | 'Legs' | 'Core'
 //   primaryGroup    — one of the 12 muscle groups (matches Notion select options)
 //   primarySub      — sub-muscle label (free text, matches Notion)
 //   primaryPct      — 0..100, proportion of work going to primary sub-muscle
@@ -20,16 +20,16 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 70,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
-      { group: 'Triceps', sub: 'All Heads', pct: 10 },
+      { group: 'Triceps', sub: 'Lateral Head', pct: 10 },
     ],
-    compound: true, prWeightKg: 30, prReps: 6, // 15kg/side + 20kg bar ≈ 50, kept at user's logged 15/side (30 working)
+    compound: true, prWeightKg: 30, prReps: 6,
   },
   {
     name: 'Flat Dumbbell Press', day: 'Push',
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 65,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
-      { group: 'Triceps', sub: 'All Heads', pct: 15 },
+      { group: 'Triceps', sub: 'Lateral Head', pct: 15 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
@@ -38,7 +38,7 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 65,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 25 },
-      { group: 'Triceps', sub: 'All Heads', pct: 10 },
+      { group: 'Triceps', sub: 'Lateral Head', pct: 10 },
     ],
     compound: true, prWeightKg: 20, prReps: 6,
   },
@@ -47,7 +47,7 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 60,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 25 },
-      { group: 'Triceps', sub: 'All Heads', pct: 15 },
+      { group: 'Triceps', sub: 'Lateral Head', pct: 15 },
     ],
     compound: true, prWeightKg: 15, prReps: 10,
   },
@@ -62,7 +62,7 @@ export const EXERCISES = [
   },
   {
     name: 'Close-Grip Bench Press', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'All Heads (Compound)', primaryPct: 55,
+    primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 55,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
       { group: 'Shoulders', sub: 'Front Delts', pct: 15 },
@@ -103,7 +103,7 @@ export const EXERCISES = [
     name: 'Shoulder Barbell Press / OHP', day: 'Push',
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 60,
     secondary: [
-      { group: 'Triceps', sub: 'All Heads', pct: 25 },
+      { group: 'Triceps', sub: 'Long Head', pct: 25 },
       { group: 'Chest', sub: 'Upper Chest', pct: 15 },
     ],
     compound: true, prWeightKg: 20, prReps: 10,
@@ -111,14 +111,14 @@ export const EXERCISES = [
   {
     name: 'Machine Shoulder Press', day: 'Push',
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 65,
-    secondary: [{ group: 'Triceps', sub: 'All Heads', pct: 35 }],
+    secondary: [{ group: 'Triceps', sub: 'Lateral Head', pct: 35 }],
     compound: true, prWeightKg: 23, prReps: 10,
   },
   {
     name: 'Dumbbell Shoulder Press', day: 'Push',
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 60,
     secondary: [
-      { group: 'Triceps', sub: 'All Heads', pct: 25 },
+      { group: 'Triceps', sub: 'Long Head', pct: 25 },
       { group: 'Chest', sub: 'Upper Chest', pct: 15 },
     ],
     compound: true, prWeightKg: null, prReps: null,
@@ -161,37 +161,37 @@ export const EXERCISES = [
   },
   {
     name: 'Skullcrushers (EZ Bar)', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Long Head (Stretch / Overhead)', primaryPct: 80,
+    primaryGroup: 'Triceps', primarySub: 'Long Head', primaryPct: 80,
     secondary: [],
     compound: false, prWeightKg: 20, prReps: 5,
   },
   {
     name: 'Overhead Cable Triceps Extension', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Long Head (Stretch / Overhead)', primaryPct: 75,
+    primaryGroup: 'Triceps', primarySub: 'Long Head', primaryPct: 75,
     secondary: [{ group: 'Chest', sub: 'Lower Chest', pct: 25 }],
     compound: false, prWeightKg: 10, prReps: 5,
   },
   {
     name: 'Dumbbell Overhead Extension', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Long Head (Stretch / Overhead)', primaryPct: 75,
+    primaryGroup: 'Triceps', primarySub: 'Long Head', primaryPct: 75,
     secondary: [],
     compound: false, prWeightKg: 10, prReps: 8,
   },
   {
     name: 'Triceps Rope Pushdown', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Lateral Head (Outer / Pushdown)', primaryPct: 75,
+    primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 75,
     secondary: [],
     compound: false, prWeightKg: 25, prReps: 10,
   },
   {
     name: 'Straight Bar Cable Pushdown', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Lateral Head (Outer / Pushdown)', primaryPct: 70,
+    primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 70,
     secondary: [],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
     name: 'Diamond Push-Ups', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'All Heads (Bodyweight)', primaryPct: 50,
+    primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 50,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
@@ -207,7 +207,7 @@ export const EXERCISES = [
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 25 },
       { group: 'Glutes', sub: 'Glute Max', pct: 15 },
       { group: 'Traps', sub: 'Upper Traps', pct: 10 },
-      { group: 'Core', sub: 'Stabilisers', pct: 5 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 5 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
@@ -264,7 +264,7 @@ export const EXERCISES = [
     secondary: [
       { group: 'Biceps', sub: 'Brachialis', pct: 20 },
       { group: 'Shoulders', sub: 'Rear Delts', pct: 10 },
-      { group: 'Core', sub: 'Stabilisers', pct: 5 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 5 },
     ],
     compound: true, prWeightKg: 0, prReps: 6,
   },
@@ -274,7 +274,7 @@ export const EXERCISES = [
     secondary: [
       { group: 'Biceps', sub: 'Brachialis', pct: 20 },
       { group: 'Shoulders', sub: 'Rear Delts', pct: 10 },
-      { group: 'Core', sub: 'Stabilisers', pct: 5 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 5 },
     ],
     compound: true, prWeightKg: 45, prReps: 8,
   },
@@ -290,21 +290,21 @@ export const EXERCISES = [
   {
     name: 'Straight Arm Cable Pulldown', day: 'Pull',
     primaryGroup: 'Back', primarySub: 'Lats (Width / Vertical Pull)', primaryPct: 80,
-    secondary: [{ group: 'Core', sub: 'Stabilisers', pct: 20 }],
+    secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 20 }],
     compound: false, prWeightKg: 13.6, prReps: 10,
   },
   {
     name: 'Face Pull', day: 'Pull',
-    primaryGroup: 'Back', primarySub: 'Rear Delts / Upper Traps', primaryPct: 60,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 60,
     secondary: [
-      { group: 'Shoulders', sub: 'Rear Delts (Posterior)', pct: 25 },
+      { group: 'Traps', sub: 'Upper Traps', pct: 25 },
       { group: 'Shoulders', sub: 'External Rotators', pct: 15 },
     ],
     compound: false, prWeightKg: 13.6, prReps: 8,
   },
   {
     name: 'Rear Delt Dumbbell Fly', day: 'Pull',
-    primaryGroup: 'Back', primarySub: 'Rear Delts (Posterior)', primaryPct: 80,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 80,
     secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
@@ -378,27 +378,27 @@ export const EXERCISES = [
   // ——— LEGS ———
   {
     name: 'Squats', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Bilateral — Rectus Femoris / Vastus', primaryPct: 55,
+    primaryGroup: 'Quads', primarySub: 'Rectus Femoris / Vastus', primaryPct: 55,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 20 },
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 15 },
-      { group: 'Core', sub: 'Spinal Erectors', pct: 10 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 10 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Bulgarian Split Squats', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Unilateral — Rectus Femoris / Vastus', primaryPct: 55,
+    primaryGroup: 'Quads', primarySub: 'Rectus Femoris / Vastus', primaryPct: 55,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 20 },
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 15 },
-      { group: 'Core', sub: 'Hip Flexors', pct: 10 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 10 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Leg Press', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Bilateral — All Quad Heads', primaryPct: 65,
+    primaryGroup: 'Quads', primarySub: 'Rectus Femoris / Vastus', primaryPct: 65,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 20 },
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 15 },
@@ -407,7 +407,7 @@ export const EXERCISES = [
   },
   {
     name: 'Romanian Deadlift (RDL)', day: 'Legs',
-    primaryGroup: 'Hamstrings', primarySub: 'Long Head (Hip Hinge / Hip Flexion)', primaryPct: 55,
+    primaryGroup: 'Hamstrings', primarySub: 'Biceps Femoris (Hip Hinge)', primaryPct: 55,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 30 },
       { group: 'Back', sub: 'Spinal Erectors', pct: 15 },
@@ -416,50 +416,50 @@ export const EXERCISES = [
   },
   {
     name: 'Single Leg RDL', day: 'Legs',
-    primaryGroup: 'Hamstrings', primarySub: 'Long Head (Unilateral Hip Hinge)', primaryPct: 60,
+    primaryGroup: 'Hamstrings', primarySub: 'Biceps Femoris (Hip Hinge)', primaryPct: 60,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 25 },
-      { group: 'Core', sub: 'Stabilisers', pct: 15 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 15 },
     ],
     compound: true, prWeightKg: 2.5, prReps: null,
   },
   {
     name: 'Barbell Hip Thrust', day: 'Legs',
-    primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension — Peak Contraction)', primaryPct: 70,
+    primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension)', primaryPct: 70,
     secondary: [
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 },
-      { group: 'Core', sub: 'Stabilisers', pct: 10 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 10 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Reverse Lunges', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Unilateral — Rectus Femoris / Vastus', primaryPct: 50,
+    primaryGroup: 'Quads', primarySub: 'Rectus Femoris / Vastus', primaryPct: 50,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 20 },
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 },
-      { group: 'Core', sub: 'Hip Flexors', pct: 10 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 10 },
     ],
     compound: true, prWeightKg: 0, prReps: null,
   },
   {
     name: 'Sumo Squats', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Bilateral — Vastus Medialis / Inner Quad', primaryPct: 50,
+    primaryGroup: 'Quads', primarySub: 'Vastus Medialis / Inner Quad', primaryPct: 50,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 30 },
-      { group: 'Quads', sub: 'Inner Groin (Adductors)', pct: 20 },
+      { group: 'Quads', sub: 'Adductors', pct: 20 },
     ],
     compound: true, prWeightKg: 5, prReps: null,
   },
   {
     name: 'Quad Raises / Leg Extension', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Unilateral — Rectus Femoris (Isolation)', primaryPct: 90,
+    primaryGroup: 'Quads', primarySub: 'Rectus Femoris (Isolation)', primaryPct: 90,
     secondary: [],
     compound: false, prWeightKg: 14, prReps: null,
   },
   {
     name: 'Seated Hamstring Curl', day: 'Legs',
-    primaryGroup: 'Hamstrings', primarySub: 'Long Head (Knee Flexion + Hip Flexed)', primaryPct: 85,
+    primaryGroup: 'Hamstrings', primarySub: 'Biceps Femoris (Knee Flexion)', primaryPct: 85,
     secondary: [{ group: 'Calves', sub: 'Gastrocnemius', pct: 15 }],
     compound: false, prWeightKg: null, prReps: null,
   },
@@ -468,26 +468,116 @@ export const EXERCISES = [
     primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension)', primaryPct: 65,
     secondary: [
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 25 },
-      { group: 'Core', sub: 'Stabilisers', pct: 10 },
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 10 },
     ],
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
     name: 'Cable Kickbacks', day: 'Legs',
-    primaryGroup: 'Glutes', primarySub: 'Glute Max (Isolated Hip Extension)', primaryPct: 80,
+    primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension)', primaryPct: 80,
     secondary: [{ group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
     name: 'Standing Calf Raise', day: 'Legs',
-    primaryGroup: 'Calves', primarySub: 'Gastrocnemius (Upper Calf — Straight Leg)', primaryPct: 85,
+    primaryGroup: 'Calves', primarySub: 'Gastrocnemius (Straight Leg)', primaryPct: 85,
     secondary: [],
     compound: false, prWeightKg: 50, prReps: null,
   },
   {
     name: 'Seated Calf Raise', day: 'Legs',
-    primaryGroup: 'Calves', primarySub: 'Soleus (Lower Calf — Bent Knee)', primaryPct: 85,
+    primaryGroup: 'Calves', primarySub: 'Soleus (Bent Knee)', primaryPct: 85,
     secondary: [],
+    compound: false, prWeightKg: null, prReps: null,
+  },
+
+  // ——— CORE ———
+  {
+    name: 'Cable Crunch', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Upper Abs (Rectus Abdominis)', primaryPct: 85,
+    secondary: [],
+    compound: false, prWeightKg: null, prReps: null,
+  },
+  {
+    name: 'Decline Sit-Up', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Upper Abs (Rectus Abdominis)', primaryPct: 80,
+    secondary: [{ group: 'Core', sub: 'Obliques', pct: 20 }],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Hanging Leg Raise', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Lower Abs (Rectus Abdominis)', primaryPct: 75,
+    secondary: [
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 15 },
+      { group: 'Forearms', sub: 'Grip Strength / Brachioradialis', pct: 10 },
+    ],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Lying Leg Raise', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Lower Abs (Rectus Abdominis)', primaryPct: 85,
+    secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 15 }],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: "Captain's Chair Knee Raise", day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Lower Abs (Rectus Abdominis)', primaryPct: 80,
+    secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 20 }],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Ab Wheel Rollout', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Upper Abs (Rectus Abdominis)', primaryPct: 60,
+    secondary: [
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 20 },
+      { group: 'Shoulders', sub: 'Front Delts', pct: 10 },
+      { group: 'Back', sub: 'Lats', pct: 10 },
+    ],
+    compound: true, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Russian Twist', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 80,
+    secondary: [{ group: 'Core', sub: 'Upper Abs (Rectus Abdominis)', pct: 20 }],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Cable Woodchopper', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 75,
+    secondary: [
+      { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 15 },
+      { group: 'Shoulders', sub: 'Front Delts', pct: 10 },
+    ],
+    compound: false, prWeightKg: null, prReps: null,
+  },
+  {
+    name: 'Bicycle Crunch', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 65,
+    secondary: [
+      { group: 'Core', sub: 'Upper Abs (Rectus Abdominis)', pct: 20 },
+      { group: 'Core', sub: 'Lower Abs (Rectus Abdominis)', pct: 15 },
+    ],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Plank', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Deep Core (Transverse Abdominis)', primaryPct: 70,
+    secondary: [
+      { group: 'Shoulders', sub: 'Front Delts', pct: 15 },
+      { group: 'Core', sub: 'Upper Abs (Rectus Abdominis)', pct: 15 },
+    ],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Dead Bug', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Deep Core (Transverse Abdominis)', primaryPct: 75,
+    secondary: [{ group: 'Core', sub: 'Lower Abs (Rectus Abdominis)', pct: 25 }],
+    compound: false, prWeightKg: 0, prReps: null,
+  },
+  {
+    name: 'Pallof Press', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 70,
+    secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 30 }],
     compound: false, prWeightKg: null, prReps: null,
   },
 ];
@@ -499,7 +589,6 @@ export function exercisesByDay(day) {
 }
 
 export function subMusclesForDay(day) {
-  // Unique { group, sub } pairs available for that day's primary targets
   const seen = new Map();
   for (const ex of exercisesByDay(day)) {
     const key = `${ex.primaryGroup}::${ex.primarySub}`;
@@ -510,10 +599,22 @@ export function subMusclesForDay(day) {
   );
 }
 
+export function muscleGroupsForDay(day) {
+  const seen = new Map();
+  for (const ex of exercisesByDay(day)) {
+    if (!seen.has(ex.primaryGroup)) seen.set(ex.primaryGroup, ex.primaryGroup);
+  }
+  return Array.from(seen.values()).sort();
+}
+
 export function exercisesFor(day, group, sub) {
   return EXERCISES.filter(
     (e) => e.day === day && e.primaryGroup === group && e.primarySub === sub
   );
+}
+
+export function exercisesForGroup(day, group) {
+  return EXERCISES.filter((e) => e.day === day && e.primaryGroup === group);
 }
 
 export function findExercise(name) {

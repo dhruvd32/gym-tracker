@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   subMusclesForDay,
+  muscleGroupsForDay,
   exercisesFor,
+  exercisesForGroup,
 } from '../data/exerciseLibrary.js';
+import { BodyHeatmap } from './BodyHeatmap.jsx';
 import { addSet, isPR, getLastSetsFor } from '../data/db.js';
 import { flushSyncQueue } from '../data/sync.js';
 import { toIsoDate } from '../data/volume.js';
@@ -16,6 +19,8 @@ const DAYS = [
   { key: 'Legs', letter: 'G', name: 'Legs' },
   { key: 'Core', letter: 'C', name: 'Core' },
 ];
+
+const LEGS_SIMPLIFIED = true;
 
 // ─────────────────────────────────────────────────────────────
 // Top-level screen: either the day-picker or the session builder.
@@ -60,14 +65,10 @@ export function LogScreen({ showToast }) {
 // ─────────────────────────────────────────────────────────────
 
 function SessionBuilder({ draft, updateDraft, showToast }) {
-  // Navigation inside the builder. `view` is one of:
-  //   'builder'          → main list with "+ Add Exercise" and "Log Day"
-  //   'pick-sub'         → choose sub-muscle chips
-  //   'pick-exercise'    → list exercises for a chosen sub
-  //   'edit-sets'        → add/remove sets for a specific draft exercise
   const [view, setView] = useState('builder');
-  const [subPick, setSubPick] = useState(null); // { group, sub }
-  const [editIdx, setEditIdx] = useState(null); // index into draft.exercises
+  const [subPick, setSubPick] = useState(null);   // { group, sub } or { group } for legs
+  const [editIdx, setEditIdx] = useState(null);
+  const [focusGroup, setFocusGroup] = useState(null);
 
   const readyToLog = draft.exercises.some((ex) => ex.sets.length > 0);
   const totalSets = draft.exercises.reduce((n, ex) => n + ex.sets.length, 0);
@@ -76,7 +77,6 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
     if (!readyToLog) return;
     const dateIso = toIsoDate(new Date());
 
-    // Flatten exercises → sets and write in order, so setNumber matches draft order.
     for (const ex of draft.exercises) {
       let setNumber = 1;
       for (const s of ex.sets) {
@@ -111,32 +111,65 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
     setEditIdx(null);
   }
 
+  // Legs day uses simplified group-level picker
+  const isLegsDay = draft.dayType === 'Legs' && LEGS_SIMPLIFIED;
+
+  // All muscle groups targeted this day (for body highlight)
+  const dayGroups = isLegsDay
+    ? new Set(muscleGroupsForDay(draft.dayType))
+    : new Set(subMusclesForDay(draft.dayType).map((s) => s.group));
+
   // ——— Sub-picker view ———
   if (view === 'pick-sub') {
-    if (draft.dayType === 'Core') {
+    const highlightSet = focusGroup ? new Set([focusGroup]) : dayGroups;
+
+    if (isLegsDay) {
+      const groups = muscleGroupsForDay(draft.dayType);
       return (
         <>
-          <button className="back-link" onClick={() => setView('builder')}>← Back to session</button>
+          <button className="back-link" onClick={() => { setView('builder'); setFocusGroup(null); }}>← Back to session</button>
           <div className="section">
-            <div className="empty">
-              Core exercises aren't seeded yet. Log via Push/Pull/Legs for now — core volume accumulates from compound lifts.
+            <div className="label">{draft.dayType} Day — Target</div>
+            <div className="body-picker-wrap">
+              <BodyHeatmap highlightGroups={highlightSet} />
+            </div>
+            <div className="chip-list">
+              {groups.map((g) => (
+                <button
+                  key={g}
+                  className="chip"
+                  onPointerDown={() => setFocusGroup(g)}
+                  onPointerUp={() => setFocusGroup(null)}
+                  onPointerLeave={() => setFocusGroup(null)}
+                  onClick={() => { setSubPick({ group: g }); setFocusGroup(null); setView('pick-exercise'); }}
+                >
+                  <span className="group-tag">{g}</span>
+                </button>
+              ))}
             </div>
           </div>
         </>
       );
     }
+
     const subs = subMusclesForDay(draft.dayType);
     return (
       <>
-        <button className="back-link" onClick={() => setView('builder')}>← Back to session</button>
+        <button className="back-link" onClick={() => { setView('builder'); setFocusGroup(null); }}>← Back to session</button>
         <div className="section">
           <div className="label">{draft.dayType} Day — Target</div>
+          <div className="body-picker-wrap">
+            <BodyHeatmap highlightGroups={highlightSet} />
+          </div>
           <div className="chip-list">
             {subs.map((s) => (
               <button
                 key={`${s.group}::${s.sub}`}
                 className="chip"
-                onClick={() => { setSubPick(s); setView('pick-exercise'); }}
+                onPointerDown={() => setFocusGroup(s.group)}
+                onPointerUp={() => setFocusGroup(null)}
+                onPointerLeave={() => setFocusGroup(null)}
+                onClick={() => { setSubPick(s); setFocusGroup(null); setView('pick-exercise'); }}
               >
                 <span className="group-tag">{s.group}</span>
                 {s.sub}
@@ -150,12 +183,20 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
 
   // ——— Exercise-picker view ———
   if (view === 'pick-exercise' && subPick) {
-    const list = exercisesFor(draft.dayType, subPick.group, subPick.sub);
+    const list = subPick.sub
+      ? exercisesFor(draft.dayType, subPick.group, subPick.sub)
+      : exercisesForGroup(draft.dayType, subPick.group);
+
+    const exerciseHighlight = new Set([subPick.group]);
+
     return (
       <>
         <button className="back-link" onClick={() => setView('pick-sub')}>← Back</button>
         <div className="section">
-          <div className="label">{subPick.group} · {subPick.sub}</div>
+          <div className="label">{subPick.group}{subPick.sub ? ` · ${subPick.sub}` : ''}</div>
+          <div className="body-picker-wrap small">
+            <BodyHeatmap highlightGroups={exerciseHighlight} />
+          </div>
           {list.map((ex) => (
             <div
               key={ex.name}
@@ -268,8 +309,6 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
 // ─────────────────────────────────────────────────────────────
 
 function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
-  // Seed inputs with PR if no sets yet, otherwise with the last set (common case:
-  // user keeps same weight for the next set).
   const last = exercise.sets[exercise.sets.length - 1];
   const seed = last
     ? { w: String(last.weight), r: String(last.reps) }
@@ -288,7 +327,6 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
       ...exercise,
       sets: [...exercise.sets, { weight: Number(weight), reps: Number(reps) }],
     });
-    // Keep inputs — user usually reuses the same values for the next set.
   }
 
   function removeSetAt(idx) {

@@ -3,9 +3,21 @@ import { gradeMuscle } from '../data/volume.js';
 
 // Stylised anatomical silhouettes. Each <path data-group="..."> is colored by
 // grade(group, tonnage). Geometry is hand-tuned to read clearly at mobile scale.
+//
+// Props:
+//   tonnageByGroup  — { [group]: number } for heatmap coloring (standard mode)
+//   highlightGroups — Set<string> of group names to highlight (highlight mode)
+//   onMuscleClick   — callback(group)
 
-export function BodyHeatmap({ tonnageByGroup, onMuscleClick }) {
-  const color = (group) => gradeMuscle(group, tonnageByGroup[group] || 0).color;
+export function BodyHeatmap({ tonnageByGroup, highlightGroups, onMuscleClick }) {
+  const color = (group) => {
+    if (highlightGroups) {
+      return highlightGroups.has(group)
+        ? 'var(--accent)'
+        : 'var(--grade-untrained)';
+    }
+    return gradeMuscle(group, (tonnageByGroup || {})[group] || 0).color;
+  };
 
   const clickable = (group) => ({
     fill: color(group),

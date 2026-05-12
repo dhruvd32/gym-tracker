@@ -769,3 +769,56 @@ input:focus, select:focus {
   background: var(--bg-raise);
 }
 .back-link:hover { color: var(--ink); }
+
+/* ——— Body picker (in LogScreen sub-picker) ——— */
+
+.body-picker-wrap {
+  margin-bottom: 14px;
+}
+.body-picker-wrap .body-svg-wrap {
+  padding: 0;
+}
+.body-picker-wrap.small .body-svg-wrap {
+  max-width: 200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ——— Sub-muscle breakdown rows (heatmap) ——— */
+
+.sub-muscle-breakdown {
+  padding: 6px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sub-muscle-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 56px;
+  gap: 8px;
+  align-items: center;
+}
+.sub-muscle-row .sub-name {
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub-muscle-row .sub-bar-track {
+  height: 4px;
+  background: var(--bg-inset);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sub-muscle-row .sub-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+.sub-muscle-row .sub-tonnage {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+  text-align: right;
+}
