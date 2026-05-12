@@ -9,7 +9,6 @@ import { toIsoDate } from '../data/volume.js';
 import {
   loadDraft, saveDraft, clearDraft, newDraft, draftExerciseFrom,
 } from '../data/draft.js';
-import { BodyHeatmap } from './BodyHeatmap.jsx';
 
 const DAYS = [
   { key: 'Push', letter: 'P', name: 'Push' },
@@ -127,20 +126,12 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
       );
     }
     const subs = subMusclesForDay(draft.dayType);
-    
-    // For pick-sub, highlight all subs for the day
-    const dayTonnage = {};
-    subs.forEach(s => {
-      dayTonnage[`${s.group} — ${s.sub}`] = 1000; // arbitrary >0 to highlight
-    });
-
     return (
       <>
         <button className="back-link" onClick={() => setView('builder')}>← Back to session</button>
         <div className="section">
           <div className="label">{draft.dayType} Day — Target</div>
-          <BodyHeatmap subTonnage={dayTonnage} />
-          <div className="chip-list mt-m">
+          <div className="chip-list">
             {subs.map((s) => (
               <button
                 key={`${s.group}::${s.sub}`}
@@ -164,28 +155,25 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
       <>
         <button className="back-link" onClick={() => setView('pick-sub')}>← Back</button>
         <div className="section">
-          <div className="label" style={{ marginBottom: 12 }}>{subPick.group} · {subPick.sub}</div>
-          <BodyHeatmap highlightSub={subPick} />
-          <div className="mt-m">
-            {list.map((ex) => (
-              <div
-                key={ex.name}
-                className="exercise"
-                onClick={() => {
-                  const next = { ...draft, exercises: [...draft.exercises, draftExerciseFrom(ex)] };
-                  updateDraft(next);
-                  setEditIdx(next.exercises.length - 1);
-                  setView('edit-sets');
-                }}
-              >
-                <div className="row spread">
-                  <div className="exercise-name">{ex.name}</div>
-                  {ex.compound && <div className="exercise-meta compound-flag">COMPOUND</div>}
-                </div>
-                <LastTimeChip exerciseName={ex.name} />
+          <div className="label">{subPick.group} · {subPick.sub}</div>
+          {list.map((ex) => (
+            <div
+              key={ex.name}
+              className="exercise"
+              onClick={() => {
+                const next = { ...draft, exercises: [...draft.exercises, draftExerciseFrom(ex)] };
+                updateDraft(next);
+                setEditIdx(next.exercises.length - 1);
+                setView('edit-sets');
+              }}
+            >
+              <div className="row spread">
+                <div className="exercise-name">{ex.name}</div>
+                {ex.compound && <div className="exercise-meta compound-flag">COMPOUND</div>}
               </div>
-            ))}
-          </div>
+              <LastTimeChip exerciseName={ex.name} />
+            </div>
+          ))}
         </div>
       </>
     );
