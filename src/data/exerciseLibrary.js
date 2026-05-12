@@ -20,7 +20,7 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 70,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
-      { group: 'Triceps', sub: 'Lateral Head', pct: 10 },
+      { group: 'Triceps', sub: 'All Heads', pct: 10 },
     ],
     compound: true, prWeightKg: 30, prReps: 6,
   },
@@ -29,7 +29,7 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 65,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
-      { group: 'Triceps', sub: 'Lateral Head', pct: 15 },
+      { group: 'Triceps', sub: 'All Heads', pct: 15 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
@@ -38,7 +38,7 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 65,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 25 },
-      { group: 'Triceps', sub: 'Lateral Head', pct: 10 },
+      { group: 'Triceps', sub: 'All Heads', pct: 10 },
     ],
     compound: true, prWeightKg: 20, prReps: 6,
   },
@@ -47,7 +47,7 @@ export const EXERCISES = [
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 60,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 25 },
-      { group: 'Triceps', sub: 'Lateral Head', pct: 15 },
+      { group: 'Triceps', sub: 'All Heads', pct: 15 },
     ],
     compound: true, prWeightKg: 15, prReps: 10,
   },
@@ -55,14 +55,14 @@ export const EXERCISES = [
     name: 'Dips', day: 'Push',
     primaryGroup: 'Chest', primarySub: 'Lower Chest', primaryPct: 55,
     secondary: [
-      { group: 'Triceps', sub: 'Long Head', pct: 30 },
+      { group: 'Triceps', sub: 'All Heads', pct: 30 },
       { group: 'Shoulders', sub: 'Front Delts', pct: 15 },
     ],
     compound: true, prWeightKg: 0, prReps: 10,
   },
   {
     name: 'Close-Grip Bench Press', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 55,
+    primaryGroup: 'Triceps', primarySub: 'All Heads', primaryPct: 55,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
       { group: 'Shoulders', sub: 'Front Delts', pct: 15 },
@@ -103,7 +103,7 @@ export const EXERCISES = [
     name: 'Shoulder Barbell Press / OHP', day: 'Push',
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 60,
     secondary: [
-      { group: 'Triceps', sub: 'Long Head', pct: 25 },
+      { group: 'Triceps', sub: 'All Heads', pct: 25 },
       { group: 'Chest', sub: 'Upper Chest', pct: 15 },
     ],
     compound: true, prWeightKg: 20, prReps: 10,
@@ -111,14 +111,14 @@ export const EXERCISES = [
   {
     name: 'Machine Shoulder Press', day: 'Push',
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 65,
-    secondary: [{ group: 'Triceps', sub: 'Lateral Head', pct: 35 }],
+    secondary: [{ group: 'Triceps', sub: 'All Heads', pct: 35 }],
     compound: true, prWeightKg: 23, prReps: 10,
   },
   {
     name: 'Dumbbell Shoulder Press', day: 'Push',
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 60,
     secondary: [
-      { group: 'Triceps', sub: 'Long Head', pct: 25 },
+      { group: 'Triceps', sub: 'All Heads', pct: 25 },
       { group: 'Chest', sub: 'Upper Chest', pct: 15 },
     ],
     compound: true, prWeightKg: null, prReps: null,
@@ -141,12 +141,7 @@ export const EXERCISES = [
     secondary: [{ group: 'Chest', sub: 'Upper Chest (Clavicular Head)', pct: 15 }],
     compound: false, prWeightKg: 7.5, prReps: 8,
   },
-  {
-    name: 'Reverse Pec Deck', day: 'Push',
-    primaryGroup: 'Shoulders', primarySub: 'Rear Delts (Posterior)', primaryPct: 80,
-    secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
-    compound: false, prWeightKg: null, prReps: null,
-  },
+
   {
     name: 'Barbell Shrugs', day: 'Push',
     primaryGroup: 'Traps', primarySub: 'Upper Traps', primaryPct: 85,
@@ -191,7 +186,7 @@ export const EXERCISES = [
   },
   {
     name: 'Diamond Push-Ups', day: 'Push',
-    primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 50,
+    primaryGroup: 'Triceps', primarySub: 'All Heads', primaryPct: 50,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
@@ -309,6 +304,12 @@ export const EXERCISES = [
     compound: false, prWeightKg: null, prReps: null,
   },
   {
+    name: 'Reverse Pec Deck', day: 'Pull',
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 80,
+    secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
+    compound: false, prWeightKg: null, prReps: null,
+  },
+  {
     name: 'Hyperextensions / Back Extensions', day: 'Pull',
     primaryGroup: 'Back', primarySub: 'Spinal Erectors / Lower Back', primaryPct: 70,
     secondary: [
@@ -349,30 +350,30 @@ export const EXERCISES = [
   },
   {
     name: 'Reverse Barbell Curl', day: 'Pull',
-    primaryGroup: 'Forearms', primarySub: 'Brachioradialis / Wrist Extensors', primaryPct: 70,
+    primaryGroup: 'Forearms', primarySub: 'Outer Forearm (Wrist Extensors)', primaryPct: 70,
     secondary: [{ group: 'Biceps', sub: 'Long Head', pct: 30 }],
-    compound: false, prWeightKg: 15, prReps: 10,
+    compound: true, prWeightKg: 15, prReps: 10,
   },
   {
     name: 'Classic Wrist Curls', day: 'Pull',
-    primaryGroup: 'Forearms', primarySub: 'Wrist Flexors (Inner Forearm)', primaryPct: 85,
+    primaryGroup: 'Forearms', primarySub: 'Inner Forearm (Wrist Flexors)', primaryPct: 85,
     secondary: [],
     compound: false, prWeightKg: 15, prReps: null,
   },
   {
     name: 'Reverse Wrist Curls', day: 'Pull',
-    primaryGroup: 'Forearms', primarySub: 'Wrist Extensors (Outer Forearm)', primaryPct: 85,
+    primaryGroup: 'Forearms', primarySub: 'Outer Forearm (Wrist Extensors)', primaryPct: 85,
     secondary: [],
     compound: false, prWeightKg: 10, prReps: null,
   },
   {
     name: 'Dead Hangs', day: 'Pull',
-    primaryGroup: 'Forearms', primarySub: 'Grip Strength / Brachioradialis', primaryPct: 60,
+    primaryGroup: 'Forearms', primarySub: 'Inner Forearm (Wrist Flexors)', primaryPct: 60,
     secondary: [
       { group: 'Back', sub: 'Lats', pct: 30 },
       { group: 'Shoulders', sub: 'Shoulder Decompression', pct: 10 },
     ],
-    compound: false, prWeightKg: 0, prReps: null,
+    compound: true, prWeightKg: 0, prReps: null, measureType: 'time',
   },
 
   // ——— LEGS ———
@@ -566,7 +567,7 @@ export const EXERCISES = [
       { group: 'Shoulders', sub: 'Front Delts', pct: 15 },
       { group: 'Core', sub: 'Upper Abs (Rectus Abdominis)', pct: 15 },
     ],
-    compound: false, prWeightKg: 0, prReps: null,
+    compound: true, prWeightKg: 0, prReps: null, measureType: 'time',
   },
   {
     name: 'Dead Bug', day: 'Core',
