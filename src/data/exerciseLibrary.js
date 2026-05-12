@@ -199,6 +199,33 @@ export const EXERCISES = [
     compound: true, prWeightKg: 0, prReps: 10,
   },
 
+  // ——— CORE ———
+  {
+    name: 'Crunches', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Upper Abs', primaryPct: 100,
+    secondary: [],
+    compound: false, prWeightKg: 0, prReps: 20,
+  },
+  {
+    name: 'Leg Raises', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Lower Abs', primaryPct: 100,
+    secondary: [],
+    compound: false, prWeightKg: 0, prReps: 15,
+  },
+  {
+    name: 'Plank (Weighted)', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Stabilisers', primaryPct: 100,
+    secondary: [],
+    compound: true, prWeightKg: 0, prReps: 1, // time or reps? let's stick to 1 for time-based if not specified
+  },
+  {
+    name: 'Russian Twists', day: 'Core',
+    primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 100,
+    secondary: [],
+    compound: false, prWeightKg: 0, prReps: 20,
+  },
+
+
   // ——— PULL ———
   {
     name: 'Deadlift', day: 'Pull',
@@ -295,16 +322,16 @@ export const EXERCISES = [
   },
   {
     name: 'Face Pull', day: 'Pull',
-    primaryGroup: 'Back', primarySub: 'Rear Delts / Upper Traps', primaryPct: 60,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts (Posterior)', primaryPct: 60,
     secondary: [
-      { group: 'Shoulders', sub: 'Rear Delts (Posterior)', pct: 25 },
       { group: 'Shoulders', sub: 'External Rotators', pct: 15 },
+      { group: 'Traps', sub: 'Upper Traps', pct: 25 },
     ],
     compound: false, prWeightKg: 13.6, prReps: 8,
   },
   {
     name: 'Rear Delt Dumbbell Fly', day: 'Pull',
-    primaryGroup: 'Back', primarySub: 'Rear Delts (Posterior)', primaryPct: 80,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts (Posterior)', primaryPct: 80,
     secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
@@ -378,115 +405,114 @@ export const EXERCISES = [
   // ——— LEGS ———
   {
     name: 'Squats', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Bilateral — Rectus Femoris / Vastus', primaryPct: 55,
+    primaryGroup: 'Quads', primarySub: 'Quads', primaryPct: 55,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 20 },
-      { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 15 },
+      { group: 'Glutes', sub: 'Glutes', pct: 20 },
+      { group: 'Hamstrings', sub: 'Hamstrings', pct: 15 },
       { group: 'Core', sub: 'Spinal Erectors', pct: 10 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Bulgarian Split Squats', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Unilateral — Rectus Femoris / Vastus', primaryPct: 55,
+    primaryGroup: 'Quads', primarySub: 'Quads', primaryPct: 55,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 20 },
-      { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 15 },
+      { group: 'Glutes', sub: 'Glutes', pct: 20 },
+      { group: 'Hamstrings', sub: 'Hamstrings', pct: 15 },
       { group: 'Core', sub: 'Hip Flexors', pct: 10 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Leg Press', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Bilateral — All Quad Heads', primaryPct: 65,
+    primaryGroup: 'Quads', primarySub: 'Quads', primaryPct: 65,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 20 },
-      { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 15 },
+      { group: 'Glutes', sub: 'Glutes', pct: 20 },
+      { group: 'Hamstrings', sub: 'Hamstrings', pct: 15 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Romanian Deadlift (RDL)', day: 'Legs',
-    primaryGroup: 'Hamstrings', primarySub: 'Long Head (Hip Hinge / Hip Flexion)', primaryPct: 55,
+    primaryGroup: 'Hamstrings', primarySub: 'Hamstrings', primaryPct: 55,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 30 },
+      { group: 'Glutes', sub: 'Glutes', pct: 30 },
       { group: 'Back', sub: 'Spinal Erectors', pct: 15 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Single Leg RDL', day: 'Legs',
-    primaryGroup: 'Hamstrings', primarySub: 'Long Head (Unilateral Hip Hinge)', primaryPct: 60,
+    primaryGroup: 'Hamstrings', primarySub: 'Hamstrings', primaryPct: 60,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 25 },
+      { group: 'Glutes', sub: 'Glutes', pct: 25 },
       { group: 'Core', sub: 'Stabilisers', pct: 15 },
     ],
     compound: true, prWeightKg: 2.5, prReps: null,
   },
   {
     name: 'Barbell Hip Thrust', day: 'Legs',
-    primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension — Peak Contraction)', primaryPct: 70,
+    primaryGroup: 'Glutes', primarySub: 'Glutes', primaryPct: 70,
     secondary: [
-      { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 },
+      { group: 'Hamstrings', sub: 'Hamstrings', pct: 20 },
       { group: 'Core', sub: 'Stabilisers', pct: 10 },
     ],
     compound: true, prWeightKg: null, prReps: null,
   },
   {
     name: 'Reverse Lunges', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Unilateral — Rectus Femoris / Vastus', primaryPct: 50,
+    primaryGroup: 'Quads', primarySub: 'Quads', primaryPct: 50,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 20 },
-      { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 },
+      { group: 'Glutes', sub: 'Glutes', pct: 20 },
+      { group: 'Hamstrings', sub: 'Hamstrings', pct: 20 },
       { group: 'Core', sub: 'Hip Flexors', pct: 10 },
     ],
     compound: true, prWeightKg: 0, prReps: null,
   },
   {
     name: 'Sumo Squats', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Bilateral — Vastus Medialis / Inner Quad', primaryPct: 50,
+    primaryGroup: 'Quads', primarySub: 'Quads', primaryPct: 50,
     secondary: [
-      { group: 'Glutes', sub: 'Glute Max', pct: 30 },
-      { group: 'Quads', sub: 'Inner Groin (Adductors)', pct: 20 },
+      { group: 'Glutes', sub: 'Glutes', pct: 30 },
     ],
     compound: true, prWeightKg: 5, prReps: null,
   },
   {
     name: 'Quad Raises / Leg Extension', day: 'Legs',
-    primaryGroup: 'Quads', primarySub: 'Unilateral — Rectus Femoris (Isolation)', primaryPct: 90,
+    primaryGroup: 'Quads', primarySub: 'Quads', primaryPct: 90,
     secondary: [],
     compound: false, prWeightKg: 14, prReps: null,
   },
   {
     name: 'Seated Hamstring Curl', day: 'Legs',
-    primaryGroup: 'Hamstrings', primarySub: 'Long Head (Knee Flexion + Hip Flexed)', primaryPct: 85,
-    secondary: [{ group: 'Calves', sub: 'Gastrocnemius', pct: 15 }],
+    primaryGroup: 'Hamstrings', primarySub: 'Hamstrings', primaryPct: 85,
+    secondary: [{ group: 'Calves', sub: 'Calves', pct: 15 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
     name: 'Glute Bridge', day: 'Legs',
-    primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension)', primaryPct: 65,
+    primaryGroup: 'Glutes', primarySub: 'Glutes', primaryPct: 65,
     secondary: [
-      { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 25 },
+      { group: 'Hamstrings', sub: 'Hamstrings', pct: 25 },
       { group: 'Core', sub: 'Stabilisers', pct: 10 },
     ],
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
     name: 'Cable Kickbacks', day: 'Legs',
-    primaryGroup: 'Glutes', primarySub: 'Glute Max (Isolated Hip Extension)', primaryPct: 80,
-    secondary: [{ group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 }],
+    primaryGroup: 'Glutes', primarySub: 'Glutes', primaryPct: 80,
+    secondary: [{ group: 'Hamstrings', sub: 'Hamstrings', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
     name: 'Standing Calf Raise', day: 'Legs',
-    primaryGroup: 'Calves', primarySub: 'Gastrocnemius (Upper Calf — Straight Leg)', primaryPct: 85,
+    primaryGroup: 'Calves', primarySub: 'Calves', primaryPct: 85,
     secondary: [],
     compound: false, prWeightKg: 50, prReps: null,
   },
   {
     name: 'Seated Calf Raise', day: 'Legs',
-    primaryGroup: 'Calves', primarySub: 'Soleus (Lower Calf — Bent Knee)', primaryPct: 85,
+    primaryGroup: 'Calves', primarySub: 'Calves', primaryPct: 85,
     secondary: [],
     compound: false, prWeightKg: null, prReps: null,
   },

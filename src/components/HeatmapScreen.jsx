@@ -72,7 +72,7 @@ export function HeatmapScreen() {
         <div className="empty">No sets logged this week.<br />Go lift something.</div>
       ) : (
         <>
-          <BodyHeatmap tonnageByGroup={tonnage} onMuscleClick={setSelected} />
+          <BodyHeatmap tonnageByGroup={tonnage} subTonnage={subTonnage} onMuscleClick={setSelected} />
 
           <div className="legend">
             <span>Cold</span>
