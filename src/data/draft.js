@@ -56,6 +56,7 @@ export function draftExerciseFrom(ex) {
     compound: !!ex.compound,
     prWeightKg: ex.prWeightKg ?? null,
     prReps: ex.prReps ?? null,
+    measureType: ex.measureType || 'reps',
     sets: [],
   };
 }

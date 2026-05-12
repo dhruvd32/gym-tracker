@@ -72,7 +72,7 @@ export function HeatmapScreen() {
         <div className="empty">No sets logged this week.<br />Go lift something.</div>
       ) : (
         <>
-          <BodyHeatmap tonnageByGroup={tonnage} onMuscleClick={setSelected} />
+          <BodyHeatmap tonnageByGroup={tonnage} tonnageBySub={subTonnage} onMuscleClick={setSelected} />
 
           <div className="legend">
             <span>Cold</span>
@@ -117,6 +117,7 @@ export function HeatmapScreen() {
 
 function MuscleList({ tonnage, subTonnage, selected, onSelect }) {
   const rows = Object.entries(tonnage)
+    .filter(([, v]) => v > 0)
     .sort(([, a], [, b]) => b - a);
 
   return (
@@ -128,51 +129,50 @@ function MuscleList({ tonnage, subTonnage, selected, onSelect }) {
         {rows.map(([group, v]) => {
           const grade = gradeMuscle(group, v);
           const isSelected = selected === group;
+          const subEntries = Object.entries(subTonnage)
+            .filter(([k]) => k.startsWith(`${group} — `))
+            .sort(([, a], [, b]) => b - a);
+
           return (
-            <div
-              key={group}
-              className="muscle-row"
-              onClick={() => onSelect(isSelected ? null : group)}
-              style={{ cursor: 'pointer', borderColor: isSelected ? 'var(--accent)' : 'var(--line-soft)' }}
-            >
-              <div>
-                <div className="name">{group}</div>
-                <div className="muted" style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 2 }}>
-                  {grade.state === 'untrained' && 'Untouched'}
-                  {grade.state === 'under' && `Under target (${formatKg(WEEKLY_TARGETS[group]?.min || 0)} kg)`}
-                  {grade.state === 'hit' && 'Hit target'}
-                  {grade.state === 'over' && 'Overloaded'}
+            <div key={group}>
+              <div
+                className="muscle-row"
+                onClick={() => onSelect(isSelected ? null : group)}
+                style={{ cursor: 'pointer', borderColor: isSelected ? 'var(--accent)' : 'var(--line-soft)' }}
+              >
+                <div>
+                  <div className="name">{group}</div>
+                  <div className="muted" style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 2 }}>
+                    {grade.state === 'untrained' && 'Untouched'}
+                    {grade.state === 'under' && `Under target (${formatKg(WEEKLY_TARGETS[group]?.min || 0)} kg)`}
+                    {grade.state === 'hit' && 'Hit target'}
+                    {grade.state === 'over' && 'Overloaded'}
+                  </div>
                 </div>
+                <div className="tonnage tabular">{formatKg(v)} kg</div>
+                <div className="swatch" style={{ background: grade.color }} />
               </div>
-              <div className="tonnage tabular">{formatKg(v)} kg</div>
-              <div className="swatch" style={{ background: grade.color }} />
+              {subEntries.length > 1 && (
+                <div className="sub-muscle-breakdown">
+                  {subEntries.map(([k, sv]) => {
+                    const sub = k.split(' — ').slice(1).join(' — ');
+                    const pct = v > 0 ? Math.round((sv / v) * 100) : 0;
+                    return (
+                      <div key={k} className="sub-muscle-row">
+                        <span className="sub-name">{sub}</span>
+                        <div className="sub-bar-track">
+                          <div className="sub-bar-fill" style={{ width: `${pct}%`, background: grade.color }} />
+                        </div>
+                        <span className="sub-tonnage tabular">{formatKg(sv)} kg</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-
-      {selected && (
-        <div className="section">
-          <div className="card">
-            <div className="label">{selected} — Sub-muscle Breakdown</div>
-            {Object.entries(subTonnage)
-              .filter(([k]) => k.startsWith(`${selected} — `))
-              .sort(([, a], [, b]) => b - a)
-              .map(([k, v]) => {
-                const sub = k.split(' — ').slice(1).join(' — ');
-                return (
-                  <div key={k} className="row spread" style={{ padding: '6px 0', borderBottom: '1px dashed var(--line-soft)' }}>
-                    <span style={{ fontSize: 12 }}>{sub}</span>
-                    <span className="tabular muted" style={{ fontSize: 12 }}>{formatKg(v)} kg</span>
-                  </div>
-                );
-              })}
-            {Object.entries(subTonnage).filter(([k]) => k.startsWith(`${selected} — `)).length === 0 && (
-              <div className="muted" style={{ fontSize: 12 }}>No sub-muscle volume this week.</div>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 }
