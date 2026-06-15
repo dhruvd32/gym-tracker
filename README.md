@@ -2,12 +2,16 @@
 
 A personal gym-tracking PWA for Push / Pull / Legs / Core workouts. Builds a full session locally, commits the whole workout in one tap, and syncs every set to Firebase Firestore — accessible from any device, any browser, without losing history.
 
+> For an end-user walkthrough (install to home screen, day-to-day usage, screenshots), see [`USER_GUIDE.md`](USER_GUIDE.md).
+
 ---
 
 ## What it does
 
 - **Session builder** — pick a day type, add exercises and sets, tap **Log Day** once to commit. An in-progress session persists to `localStorage` so you won't lose it if the tab closes mid-workout.
-- **PR detection** — automatically flags a set as a personal record when its `weight × reps` beats every prior set for that exercise.
+- **Visual muscle picker** — the exercise picker renders the body SVG; tap a muscle group / sub-muscle to highlight it on the diagram, then **SELECT** to see the exercises that train it.
+- **Reps or time** — exercises tagged `measureType: 'time'` (planks, dead hangs) log a duration in seconds instead of reps; everything else logs reps.
+- **PR detection** — automatically flags a set as a personal record when its `weight × reps` (or `weight × seconds` for time-based holds) beats every prior set for that exercise.
 - **Firestore sync** — every logged set is queued and pushed to Firestore in the background. Edits and deletions propagate the same way.
 - **History** — reverse-chronological list of every session. Expand to see sets; edit weight/reps or delete individual sets / whole sessions.
 - **Muscle heatmap** — weekly front/back body SVG graded by total tonnage per muscle group.
@@ -102,7 +106,7 @@ users/{uid}/workout_sets/{setId}
   compound       boolean
   set_number     number
   weight_kg      number
-  reps           number
+  reps           number   — for time-based exercises this holds the duration in seconds
   is_pr          boolean
   created_at     timestamp  — serverTimestamp() on create
   updated_at     timestamp  — serverTimestamp() on every write
@@ -269,8 +273,8 @@ Every push to `master` auto-redeploys. The domain never changes.
 ## Usage
 
 1. **Log tab** — tap **Push / Pull / Legs / Core** → Session Builder opens.
-2. Tap **+ Add Exercise** → pick sub-muscle → pick exercise.
-3. Enter weight + reps → **+ Set**. Inputs retain the last values (same weight next set is common).
+2. Tap **+ Add Exercise** → the body diagram highlights as you tap a muscle group / sub-muscle → **SELECT** → pick an exercise. (Legs day picks by muscle group; the others pick by sub-muscle.)
+3. Enter weight + reps — or **Time (s)** for time-based holds — then **+ Set**. Inputs retain the last values (same weight next set is common).
 4. **← Back to session** → add another exercise or keep adding sets.
 5. **Log Day · N sets** — commits to IndexedDB and queues sync to Firestore. Toast confirms.
 6. **Heatmap tab** — weekly volume visualised as a body SVG. Navigate weeks with ← →.
@@ -305,7 +309,7 @@ src/
     sync.js                  Sync engine: flushSyncQueue + pullFromFirestore
     draft.js                 localStorage-backed in-progress session
     volume.js                Tonnage math, week helpers, heatmap grading
-    exerciseLibrary.js       ~60 exercises with primary/secondary muscle %
+    exerciseLibrary.js       ~75 Push/Pull/Legs/Core exercises with primary/secondary muscle % and measureType
   components/
     AuthScreen.jsx           Google sign-in screen
     LogScreen.jsx            Day → sub-muscle → exercise → Session Builder → Log Day
@@ -319,7 +323,6 @@ src/
 
 ## Known gaps / future work
 
-- **Core Day** is under-seeded — add Core exercises to [`exerciseLibrary.js`](src/data/exerciseLibrary.js).
 - **RPE / set quality** isn't captured. Add an `rpe` field and a number input to the set row.
 - **PR detection** is tonnage-based (`weight × reps`). For 1RM-style PRs, swap `isPR()` in [`db.js`](src/data/db.js).
 - **Bodyweight sets** log with `weight = 0` → zero tonnage. Enter your body mass to make bodyweight volume count.
