@@ -26,7 +26,7 @@ Because Gym Tracker is a Progressive Web App (PWA), you can install it directly 
 
 ## Getting Started
 1. Open the app and log in with your Google Account.
-2. On the **Log** tab, pick your day (e.g., "Push Day").
+2. On the **Log** tab, pick your day (e.g., "Push · Chest Day" or "Push · Shoulders Day").
 3. Add exercises and log your sets.
 4. When you're done with your workout, tap **Log Day** to save the entire session to your history.
 5. Check the **Heatmap** tab to see your progress light up!
@@ -36,7 +36,7 @@ Because Gym Tracker is a Progressive Web App (PWA), you can install it directly 
 ## Key Features
 
 ### 🏋️‍♂️ Intelligent Session Builder
-- **Drafts Save Automatically**: Select your day type (Push, Pull, Legs, or Core) and start logging. If you accidentally close the app or switch tabs, your draft is safely stored on your device.
+- **Drafts Save Automatically**: Select your day type (Push · Chest, Push · Shoulders, Pull, Legs, or Core) and start logging. If you accidentally close the app or switch tabs, your draft is safely stored on your device.
 - **Visual Muscle Picker**: Not sure what to hit? The app displays an interactive body diagram. Tap a specific muscle group (e.g., Lats, Triceps, or Lower Abs) to highlight the exact anatomical fragment on the model, then press **SELECT** to see all targeted exercises for that area.
 - <img width="400" height="600" alt="Screenshot 2026-05-13 at 2 58 36 AM" src="https://github.com/user-attachments/assets/b0b3d4d9-6b7f-4499-92e7-33b0aae50dcd" /> <img width="400" height="600" alt="Screenshot 2026-05-13 at 3 00 17 AM" src="https://github.com/user-attachments/assets/c2e478d5-a953-42c2-8891-3ad0546251e4" />
 

@@ -6,7 +6,7 @@ const KEY = 'gym-tracker:draft';
 
 // Draft shape:
 // {
-//   dayType: 'Push' | 'Pull' | 'Legs' | 'Core',
+//   dayType: 'Push (Chest)' | 'Push (Shoulders)' | 'Pull' | 'Legs' | 'Core',
 //   sessionId: string,
 //   startedAt: ISO string,
 //   exercises: [
@@ -65,5 +65,7 @@ function makeSessionId(dayType) {
   const today = new Date().toISOString().slice(0, 10);
   const rand = (crypto?.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2))
     .split('-')[0];
-  return `${today}::${dayType}::${rand}`.slice(0, 120);
+  // Slugify the day label so spaces/parens (e.g. "Push (Shoulders)") stay out of the id.
+  const slug = dayType.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `${today}::${slug}::${rand}`.slice(0, 120);
 }
