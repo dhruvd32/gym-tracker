@@ -98,7 +98,7 @@ Documents live under a per-user subcollection so security rules are trivial:
 users/{uid}/workout_sets/{setId}
   session_id     string   — groups sets into a workout session
   date           string   — ISO date (YYYY-MM-DD)
-  day_type       string   — "Push" | "Pull" | "Legs" | "Core"
+  day_type       string   — "Push (Chest)" | "Push (Shoulders)" | "Pull" | "Legs" | "Core"
   exercise_name  string
   primary_group  string   — major muscle group
   primary_sub    string   — sub-muscle
@@ -272,7 +272,7 @@ Every push to `master` auto-redeploys. The domain never changes.
 
 ## Usage
 
-1. **Log tab** — tap **Push / Pull / Legs / Core** → Session Builder opens.
+1. **Log tab** — tap **Push · Chest / Push · Shoulders / Pull / Legs / Core** → Session Builder opens.
 2. Tap **+ Add Exercise** → the body diagram highlights as you tap a muscle group / sub-muscle → **SELECT** → pick an exercise. (Legs day picks by muscle group; the others pick by sub-muscle.)
 3. Enter weight + reps — or **Time (s)** for time-based holds — then **+ Set**. Inputs retain the last values (same weight next set is common).
 4. **← Back to session** → add another exercise or keep adding sets.

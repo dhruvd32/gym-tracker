@@ -4,7 +4,9 @@
 //
 // Schema per row:
 //   name            — canonical exercise name
-//   day             — 'Push' | 'Pull' | 'Legs' | 'Core'
+//   day             — a day key, or an array of day keys when the exercise
+//                     belongs to more than one day (see DAY_* constants below).
+//                     Days: 'Push (Chest)' | 'Push (Shoulders)' | 'Pull' | 'Legs' | 'Core'
 //   primaryGroup    — one of the 12 muscle groups (matches Notion select options)
 //   primarySub      — sub-muscle label (free text, matches Notion)
 //   primaryPct      — 0..100, proportion of work going to primary sub-muscle
@@ -13,10 +15,18 @@
 //   prWeightKg      — last known PR (kg). 0 for bodyweight. null if unknown.
 //   prReps          — reps at PR. null if unknown.
 
+// Day keys. The original single "Push" was split into two focused push days:
+//   Push (Chest)     — upper + mid chest, side delts, upper traps, lateral + long head triceps
+//   Push (Shoulders) — front + rear delts, mid + lower chest, lateral + long head triceps
+// Exercises whose target sub-muscle belongs to both days carry both keys.
+export const DAY_PUSH_CHEST = 'Push (Chest)';
+export const DAY_PUSH_SHOULDERS = 'Push (Shoulders)';
+const PUSH_BOTH = [DAY_PUSH_CHEST, DAY_PUSH_SHOULDERS];
+
 export const EXERCISES = [
-  // ——— PUSH ———
+  // ——— PUSH (CHEST) ———
   {
-    name: 'Flat Barbell Bench Press', day: 'Push',
+    name: 'Flat Barbell Bench Press', day: PUSH_BOTH,
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 70,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
@@ -25,7 +35,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 30, prReps: 6,
   },
   {
-    name: 'Flat Dumbbell Press', day: 'Push',
+    name: 'Flat Dumbbell Press', day: PUSH_BOTH,
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 65,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
@@ -34,7 +44,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Incline Barbell Bench Press', day: 'Push',
+    name: 'Incline Barbell Bench Press', day: DAY_PUSH_CHEST,
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 65,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 25 },
@@ -43,7 +53,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 20, prReps: 6,
   },
   {
-    name: 'Incline Dumbbell Press', day: 'Push',
+    name: 'Incline Dumbbell Press', day: DAY_PUSH_CHEST,
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 60,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 25 },
@@ -52,7 +62,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 15, prReps: 10,
   },
   {
-    name: 'Dips', day: 'Push',
+    name: 'Dips', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Chest', primarySub: 'Lower Chest', primaryPct: 55,
     secondary: [
       { group: 'Triceps', sub: 'All Heads', pct: 30 },
@@ -61,7 +71,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 0, prReps: 10,
   },
   {
-    name: 'Close-Grip Bench Press', day: 'Push',
+    name: 'Close-Grip Bench Press', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'All Heads', primaryPct: 55,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
@@ -70,37 +80,37 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Low-to-High Cable Fly', day: 'Push',
+    name: 'Low-to-High Cable Fly', day: DAY_PUSH_CHEST,
     primaryGroup: 'Chest', primarySub: 'Upper Chest (Clavicular Head)', primaryPct: 80,
     secondary: [{ group: 'Shoulders', sub: 'Front Delts', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'High-to-Low Cable Fly', day: 'Push',
+    name: 'High-to-Low Cable Fly', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Chest', primarySub: 'Lower Chest', primaryPct: 80,
     secondary: [{ group: 'Shoulders', sub: 'Front Delts', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Cable Chest Fly', day: 'Push',
+    name: 'Cable Chest Fly', day: PUSH_BOTH,
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 75,
     secondary: [{ group: 'Shoulders', sub: 'Front Delts', pct: 25 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Pec Deck Machine Fly', day: 'Push',
+    name: 'Pec Deck Machine Fly', day: PUSH_BOTH,
     primaryGroup: 'Chest', primarySub: 'Mid Chest (Sternocostal Head)', primaryPct: 80,
     secondary: [{ group: 'Shoulders', sub: 'Front Delts', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Chest Fly (Machine)', day: 'Push',
+    name: 'Chest Fly (Machine)', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Chest', primarySub: 'Lower Chest', primaryPct: 75,
     secondary: [{ group: 'Shoulders', sub: 'Front Delts', pct: 25 }],
     compound: false, prWeightKg: 59, prReps: 10,
   },
   {
-    name: 'Shoulder Barbell Press / OHP', day: 'Push',
+    name: 'Shoulder Barbell Press / OHP', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 60,
     secondary: [
       { group: 'Triceps', sub: 'All Heads', pct: 25 },
@@ -109,13 +119,13 @@ export const EXERCISES = [
     compound: true, prWeightKg: 20, prReps: 10,
   },
   {
-    name: 'Machine Shoulder Press', day: 'Push',
+    name: 'Machine Shoulder Press', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 65,
     secondary: [{ group: 'Triceps', sub: 'All Heads', pct: 35 }],
     compound: true, prWeightKg: 23, prReps: 10,
   },
   {
-    name: 'Dumbbell Shoulder Press', day: 'Push',
+    name: 'Dumbbell Shoulder Press', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 60,
     secondary: [
       { group: 'Triceps', sub: 'All Heads', pct: 25 },
@@ -124,74 +134,97 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Lateral Raises (Dumbbell)', day: 'Push',
+    name: 'Lateral Raises (Dumbbell)', day: DAY_PUSH_CHEST,
     primaryGroup: 'Shoulders', primarySub: 'Side Delts (Medial)', primaryPct: 85,
     secondary: [{ group: 'Traps', sub: 'Upper Traps', pct: 15 }],
     compound: false, prWeightKg: 5, prReps: 12,
   },
   {
-    name: 'Cable Lateral Raise', day: 'Push',
+    name: 'Cable Lateral Raise', day: DAY_PUSH_CHEST,
     primaryGroup: 'Shoulders', primarySub: 'Side Delts (Medial)', primaryPct: 85,
     secondary: [{ group: 'Traps', sub: 'Upper Traps', pct: 15 }],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Front Delt Dumbbell Raise', day: 'Push',
+    name: 'Front Delt Dumbbell Raise', day: DAY_PUSH_SHOULDERS,
     primaryGroup: 'Shoulders', primarySub: 'Front Delts (Anterior)', primaryPct: 85,
     secondary: [{ group: 'Chest', sub: 'Upper Chest (Clavicular Head)', pct: 15 }],
     compound: false, prWeightKg: 7.5, prReps: 8,
   },
 
   {
-    name: 'Barbell Shrugs', day: 'Push',
+    name: 'Barbell Shrugs', day: DAY_PUSH_CHEST,
     primaryGroup: 'Traps', primarySub: 'Upper Traps', primaryPct: 85,
     secondary: [{ group: 'Shoulders', sub: 'Rear Delts (Posterior)', pct: 15 }],
     compound: false, prWeightKg: 30, prReps: 10,
   },
   {
-    name: 'Dumbbell Shrugs', day: 'Push',
+    name: 'Dumbbell Shrugs', day: DAY_PUSH_CHEST,
     primaryGroup: 'Traps', primarySub: 'Upper Traps', primaryPct: 80,
     secondary: [{ group: 'Shoulders', sub: 'Rear Delts (Posterior)', pct: 20 }],
     compound: false, prWeightKg: 17.5, prReps: 10,
   },
   {
-    name: 'Skullcrushers (EZ Bar)', day: 'Push',
+    name: 'Skullcrushers (EZ Bar)', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'Long Head', primaryPct: 80,
     secondary: [],
     compound: false, prWeightKg: 20, prReps: 5,
   },
   {
-    name: 'Overhead Cable Triceps Extension', day: 'Push',
+    name: 'Overhead Cable Triceps Extension', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'Long Head', primaryPct: 75,
     secondary: [{ group: 'Chest', sub: 'Lower Chest', pct: 25 }],
     compound: false, prWeightKg: 10, prReps: 5,
   },
   {
-    name: 'Dumbbell Overhead Extension', day: 'Push',
+    name: 'Dumbbell Overhead Extension', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'Long Head', primaryPct: 75,
     secondary: [],
     compound: false, prWeightKg: 10, prReps: 8,
   },
   {
-    name: 'Triceps Rope Pushdown', day: 'Push',
+    name: 'Triceps Rope Pushdown', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 75,
     secondary: [],
     compound: false, prWeightKg: 25, prReps: 10,
   },
   {
-    name: 'Straight Bar Cable Pushdown', day: 'Push',
+    name: 'Straight Bar Cable Pushdown', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'Lateral Head', primaryPct: 70,
     secondary: [],
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Diamond Push-Ups', day: 'Push',
+    name: 'Diamond Push-Ups', day: PUSH_BOTH,
     primaryGroup: 'Triceps', primarySub: 'All Heads', primaryPct: 50,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
       { group: 'Shoulders', sub: 'Front Delts', pct: 20 },
     ],
     compound: true, prWeightKg: 0, prReps: 10,
+  },
+
+  // Rear delts — moved off the Pull day onto the shoulder-focused push.
+  {
+    name: 'Face Pull', day: DAY_PUSH_SHOULDERS,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 60,
+    secondary: [
+      { group: 'Traps', sub: 'Upper Traps', pct: 25 },
+      { group: 'Shoulders', sub: 'External Rotators', pct: 15 },
+    ],
+    compound: false, prWeightKg: 13.6, prReps: 8,
+  },
+  {
+    name: 'Rear Delt Dumbbell Fly', day: DAY_PUSH_SHOULDERS,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 80,
+    secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
+    compound: false, prWeightKg: null, prReps: null,
+  },
+  {
+    name: 'Reverse Pec Deck', day: DAY_PUSH_SHOULDERS,
+    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 80,
+    secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
+    compound: false, prWeightKg: null, prReps: null,
   },
 
   // ——— PULL ———
@@ -287,27 +320,6 @@ export const EXERCISES = [
     primaryGroup: 'Back', primarySub: 'Lats (Width / Vertical Pull)', primaryPct: 80,
     secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 20 }],
     compound: false, prWeightKg: 13.6, prReps: 10,
-  },
-  {
-    name: 'Face Pull', day: 'Pull',
-    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 60,
-    secondary: [
-      { group: 'Traps', sub: 'Upper Traps', pct: 25 },
-      { group: 'Shoulders', sub: 'External Rotators', pct: 15 },
-    ],
-    compound: false, prWeightKg: 13.6, prReps: 8,
-  },
-  {
-    name: 'Rear Delt Dumbbell Fly', day: 'Pull',
-    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 80,
-    secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
-    compound: false, prWeightKg: null, prReps: null,
-  },
-  {
-    name: 'Reverse Pec Deck', day: 'Pull',
-    primaryGroup: 'Shoulders', primarySub: 'Rear Delts', primaryPct: 80,
-    secondary: [{ group: 'Traps', sub: 'Middle Traps', pct: 20 }],
-    compound: false, prWeightKg: null, prReps: null,
   },
   {
     name: 'Hyperextensions / Back Extensions', day: 'Pull',
@@ -585,8 +597,13 @@ export const EXERCISES = [
 
 // Helpers ——————————————————————————————————————————————————————
 
+// An exercise's `day` is either a single key or an array of keys.
+export function exerciseOnDay(ex, day) {
+  return Array.isArray(ex.day) ? ex.day.includes(day) : ex.day === day;
+}
+
 export function exercisesByDay(day) {
-  return EXERCISES.filter((e) => e.day === day);
+  return EXERCISES.filter((e) => exerciseOnDay(e, day));
 }
 
 export function subMusclesForDay(day) {
@@ -610,12 +627,12 @@ export function muscleGroupsForDay(day) {
 
 export function exercisesFor(day, group, sub) {
   return EXERCISES.filter(
-    (e) => e.day === day && e.primaryGroup === group && e.primarySub === sub
+    (e) => exerciseOnDay(e, day) && e.primaryGroup === group && e.primarySub === sub
   );
 }
 
 export function exercisesForGroup(day, group) {
-  return EXERCISES.filter((e) => e.day === day && e.primaryGroup === group);
+  return EXERCISES.filter((e) => exerciseOnDay(e, day) && e.primaryGroup === group);
 }
 
 export function findExercise(name) {
