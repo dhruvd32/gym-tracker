@@ -42,8 +42,15 @@ Because Gym Tracker is a Progressive Web App (PWA), you can install it directly 
 
 - **Time or Reps**: Whether you're lifting heavy weights for reps or doing bodyweight holds for time (like Planks or Dead Hangs), the app natively supports both logging formats.
 
+### 💪 Single-Arm & Bodyweight Exercises
+The app understands that not every exercise is a simple two-handed barbell lift, so the numbers you enter mean different things depending on the movement:
+
+- **Single-arm / single-leg moves** (e.g. Single Arm Dumbbell Row, Bulgarian Split Squats, Single Leg RDL): just **log one side**. Enter the weight you held in that one hand (the field reads *"Weight (kg/side)"*) and the reps for that arm or leg — the app automatically counts both sides, so you don't have to log each side separately or do any mental math.
+- **Bodyweight moves** (e.g. Pull-Ups, Dips, Sit-Ups, Planks): you no longer need to type your body mass in as the weight. Set **your bodyweight once** (a small box appears the first time you add a bodyweight exercise, and it's remembered after that), and the app uses it as the load. The weight field becomes *"Added (kg)"* — leave it at **0** for pure bodyweight, or enter only the **extra** weight if you wear a dip belt or hold a dumbbell.
+- **Realistic effort**: Bodyweight moves count the portion of your weight the muscle actually fights — a hard pull-up counts close to your full bodyweight, while a sit-up counts only a small slice of it. This stops light core movements from blowing your heatmap out of proportion. A live "≈ effective tonnage" hint shows what each set will contribute as you type.
+
 ### 🥇 Automatic Progress Tracking
-- **Personal Records (PRs)**: The app continuously monitors your lifts and will automatically flag a set as a Personal Record if it exceeds your previous best tonnage (Weight × Reps).
+- **Personal Records (PRs)**: The app continuously monitors your lifts and will automatically flag a set as a Personal Record if it exceeds your previous best **effective tonnage** — accounting for both-sides single-arm work and your bodyweight on bodyweight moves.
 - <img width="400" height="131" alt="Screenshot 2026-05-13 at 3 02 10 AM" src="https://github.com/user-attachments/assets/76371329-d662-4583-9171-50e247756238" />
 
 - **Session Recall**: As soon as you add an exercise to your workout, the app displays all your exercies from the current session, taking the guesswork out of progression.
@@ -58,6 +65,7 @@ Because Gym Tracker is a Progressive Web App (PWA), you can install it directly 
 - **Compound Exercise Intelligence**: A flat bench press doesn't just work your chest! The app intelligently distributes your lifted volume across your chest, front delts, and triceps proportionally, ensuring your weekly heatmap accurately reflects the actual work your body performed.
 - <img width="400" height="600" alt="Screenshot 2026-05-13 at 3 08 51 AM" src="https://github.com/user-attachments/assets/91870573-13da-4081-84b9-00b932f3bbf7" />
 - **Volume Grading**: The heatmap dynamically colors muscles from cold (untrained) to hot (overloaded) based on scientific weekly tonnage targets, helping you identify lagging muscles or avoid over-training.
+- **Nothing slips through the cracks**: Every muscle a movement works lights up on the diagram, even secondary movers — do a set of squats and your glutes, hamstrings, and core warm up alongside your quads, not just the muscle you were "aiming" for. The detailed sub-muscle split (e.g. how much hit your upper vs. lower abs) is listed underneath the body.
 - <img width="400" height="600" alt="Screenshot 2026-05-13 at 3 07 07 AM" src="https://github.com/user-attachments/assets/78b7b53f-e37f-4b1c-99e2-888ecc7c0c9b" /> 
 
 ### ☁️ Work Offline, Sync Anywhere

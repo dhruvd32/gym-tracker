@@ -11,10 +11,12 @@ A personal gym-tracking PWA for Push / Pull / Legs / Core workouts. Builds a ful
 - **Session builder** — pick a day type, add exercises and sets, tap **Log Day** once to commit. An in-progress session persists to `localStorage` so you won't lose it if the tab closes mid-workout.
 - **Visual muscle picker** — the exercise picker renders the body SVG; tap a muscle group / sub-muscle to highlight it on the diagram, then **SELECT** to see the exercises that train it.
 - **Reps or time** — exercises tagged `measureType: 'time'` (planks, dead hangs) log a duration in seconds instead of reps; everything else logs reps.
-- **PR detection** — automatically flags a set as a personal record when its `weight × reps` (or `weight × seconds` for time-based holds) beats every prior set for that exercise.
-- **Firestore sync** — every logged set is queued and pushed to Firestore in the background. Edits and deletions propagate the same way.
-- **History** — reverse-chronological list of every session. Expand to see sets; edit weight/reps or delete individual sets / whole sessions.
-- **Muscle heatmap** — weekly front/back body SVG graded by total tonnage per muscle group.
+- **Single-arm / unilateral exercises** — exercises tagged `unilateral` (single-arm rows, Bulgarian split squats, single-leg RDLs, …) are logged **one side at a time**; the effective tonnage is automatically doubled to count both sides. The set editor labels the field "Weight (kg/side)".
+- **Bodyweight exercises** — exercises tagged `bodyweight` (pull-ups, dips, sit-ups, planks, …) use your stored bodyweight as the load. Each carries a `bwLoad` factor — the fraction of bodyweight the target muscle actually resists (pull-up ≈ 1.0, sit-up ≈ 0.12) — so effective load = `bodyweight × bwLoad + addedWeight`. You enter only the **added** weight (belt/plate/dumbbell, 0 for pure bodyweight), and set your bodyweight once in the editor.
+- **PR detection** — automatically flags a set as a personal record when its **effective tonnage** (weight × reps, with bodyweight and unilateral handling applied) beats every prior set for that exercise.
+- **Firestore sync** — every logged set is queued and pushed to Firestore in the background. Edits and deletions propagate the same way. Bodyweight sets carry the body mass used so historical tonnage stays stable.
+- **History** — reverse-chronological list of every session. Expand to see sets; edit weight/reps or delete individual sets / whole sessions. Bodyweight and per-side sets are shown and totalled with their effective tonnage.
+- **Muscle heatmap** — weekly front/back body SVG graded by total tonnage per muscle group. Every region of a trained muscle is shaded by that muscle's group-level tonnage, so secondary work (e.g. glutes from squats) reliably lights up; the sub-muscle breakdown lives in the list below the diagram.
 - **Works offline** — writes happen to IndexedDB first; the sync queue drains when connectivity returns.
 - **Multi-device** — log on your phone, check history on your laptop. Source of truth lives in Firestore, not the browser.
 - **Installable** — ships as a PWA. Chrome/Safari offer "Add to Home screen"; the app launches standalone.
@@ -105,8 +107,9 @@ users/{uid}/workout_sets/{setId}
   primary_pct    number   — % of tonnage credited to primary muscle
   compound       boolean
   set_number     number
-  weight_kg      number
+  weight_kg      number   — added load for bodyweight exercises; per-side load for unilateral
   reps           number   — for time-based exercises this holds the duration in seconds
+  bodyweight_kg  number   — body mass used (only set for bodyweight exercises); null otherwise
   is_pr          boolean
   created_at     timestamp  — serverTimestamp() on create
   updated_at     timestamp  — serverTimestamp() on every write
@@ -308,8 +311,9 @@ src/
     db.js                    Dexie schema (v4) + CRUD helpers
     sync.js                  Sync engine: flushSyncQueue + pullFromFirestore
     draft.js                 localStorage-backed in-progress session
-    volume.js                Tonnage math, week helpers, heatmap grading
-    exerciseLibrary.js       ~75 Push/Pull/Legs/Core exercises with primary/secondary muscle % and measureType
+    settings.js              localStorage-backed user settings (bodyweight)
+    volume.js                Tonnage math (setVolume + bodyweight/unilateral handling), week helpers, heatmap grading
+    exerciseLibrary.js       ~75 Push/Pull/Legs/Core exercises with primary/secondary muscle %, measureType, and unilateral / bodyweight + bwLoad flags
   components/
     AuthScreen.jsx           Google sign-in screen
     LogScreen.jsx            Day → sub-muscle → exercise → Session Builder → Log Day
@@ -324,7 +328,8 @@ src/
 ## Known gaps / future work
 
 - **RPE / set quality** isn't captured. Add an `rpe` field and a number input to the set row.
-- **PR detection** is tonnage-based (`weight × reps`). For 1RM-style PRs, swap `isPR()` in [`db.js`](src/data/db.js).
-- **Bodyweight sets** log with `weight = 0` → zero tonnage. Enter your body mass to make bodyweight volume count.
+- **PR detection** is tonnage-based (effective `weight × reps`). For 1RM-style PRs, swap `isPR()` in [`db.js`](src/data/db.js).
+- **Bodyweight tonnage is applied going forward.** Each bodyweight exercise has a hand-tuned `bwLoad` factor and the body mass is stamped on every new set. Sets logged *before* this feature (which stored body mass in `weight_kg` directly) are not retroactively recalculated — a one-time migration would be needed to back-fill `bodyweight_kg` and reset `weight_kg` to the added load.
+- **`bwLoad` factors are approximations.** They're reasonable defaults, not biomechanically measured; tune them in [`exerciseLibrary.js`](src/data/exerciseLibrary.js) to taste.
 - **Sync deduplication** — the queue is idempotent client-side, but a network timeout after a successful Firestore write could cause a duplicate `create`. Mitigation: include a deterministic ID derived from `(session_id, set_number, exercise_name)` and use `setDoc` instead of `addDoc`.
 - **Multi-user** — the per-user subcollection layout already supports multiple users. Anyone with a Google account can use the deployed app; each user sees only their own documents.
