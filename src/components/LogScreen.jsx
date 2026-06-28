@@ -9,7 +9,8 @@ import {
 import { BodyHeatmap } from './BodyHeatmap.jsx';
 import { addSet, isPR, getLastSetsFor } from '../data/db.js';
 import { flushSyncQueue } from '../data/sync.js';
-import { toIsoDate } from '../data/volume.js';
+import { toIsoDate, setVolumeFor } from '../data/volume.js';
+import { getBodyweight, setBodyweight } from '../data/settings.js';
 import {
   loadDraft, saveDraft, clearDraft, newDraft, draftExerciseFrom,
 } from '../data/draft.js';
@@ -75,15 +76,20 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
 
   const readyToLog = draft.exercises.some((ex) => ex.sets.length > 0);
   const totalSets = draft.exercises.reduce((n, ex) => n + ex.sets.length, 0);
+  const bodyweight = getBodyweight();
 
   async function handleLogDay() {
     if (!readyToLog) return;
     const dateIso = toIsoDate(new Date());
+    const bodyweight = getBodyweight();
 
     for (const ex of draft.exercises) {
+      const libEx = findExercise(ex.name);
+      const isBW = !!libEx?.bodyweight;
       let setNumber = 1;
       for (const s of ex.sets) {
-        const pr = await isPR(ex.name, s.weight, s.reps);
+        const volume = setVolumeFor(libEx, s, bodyweight);
+        const pr = await isPR(ex.name, volume);
         await addSet({
           sessionId: draft.sessionId,
           date: dateIso,
@@ -96,6 +102,8 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
           setNumber,
           weight: s.weight,
           reps: s.reps,
+          // Stamp the bodyweight used so historical tonnage stays stable.
+          bodyweightKg: isBW ? bodyweight : undefined,
           isPR: pr ? 1 : 0,
         });
         setNumber += 1;
@@ -311,9 +319,11 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
                       <div key={j} className="logged-set">
                         <span className="n">SET {j + 1}</span>
                         <span className="value tabular">
-                          {s.weight} kg {isTime ? `for ${s.reps}s` : `× ${s.reps}`}
+                          {setLabel(libEx, s, isTime)}
                         </span>
-                        <span className="n tabular muted">{s.weight * s.reps} kg·{isTime ? 's' : 'r'}</span>
+                        <span className="n tabular muted">
+                          {Math.round(setVolumeFor(libEx, s, bodyweight))} kg·{isTime ? 's' : 'r'}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -353,18 +363,34 @@ function SessionBuilder({ draft, updateDraft, showToast }) {
 function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
   const libEx = findExercise(exercise.name);
   const isTime = libEx?.measureType === 'time';
+  const isBW = !!libEx?.bodyweight;
+  const isUni = !!libEx?.unilateral;
+
+  const [bodyweight, setBw] = useState(() => getBodyweight());
 
   const last = exercise.sets[exercise.sets.length - 1];
   const seed = last
     ? { w: String(last.weight), r: String(last.reps) }
     : {
-        w: exercise.prWeightKg != null ? String(exercise.prWeightKg) : '',
+        // Bodyweight moves seed the *added* weight at 0; others seed from the PR.
+        w: isBW ? '0' : (exercise.prWeightKg != null ? String(exercise.prWeightKg) : ''),
         r: exercise.prReps != null ? String(exercise.prReps) : '',
       };
   const [weight, setWeight] = useState(seed.w);
   const [reps, setReps]     = useState(seed.r);
 
+  const weightLabel = isBW ? 'Added (kg)' : isUni ? 'Weight (kg/side)' : 'Weight (kg)';
   const canAdd = Number(weight) >= 0 && Number(reps) > 0;
+  // Live preview of the effective tonnage the pending set would log.
+  const previewVol = canAdd
+    ? Math.round(setVolumeFor(libEx, { weight: Number(weight), reps: Number(reps) }, bodyweight))
+    : null;
+
+  function commitBodyweight(v) {
+    const n = Number(v);
+    setBw(v);
+    if (n > 0) setBodyweight(n);
+  }
 
   function addSetRow() {
     if (!canAdd) return;
@@ -402,9 +428,29 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
         <CompoundMuscleHits exercise={exercise} />
         <LastTimeChip exerciseName={exercise.name} />
 
+        {isBW && (
+          <div className="bw-control mt-m">
+            <label>Your bodyweight (kg)</label>
+            <input
+              type="number" inputMode="decimal" step="0.5" min="1"
+              value={bodyweight}
+              onChange={(e) => commitBodyweight(e.target.value)}
+            />
+            <span className="muted" style={{ fontSize: 11 }}>
+              Counts {Math.round((libEx.bwLoad ?? 1) * 100)}% of bodyweight
+              {` (${Math.round((Number(bodyweight) || 0) * (libEx.bwLoad ?? 1))} kg)`} per rep — add only extra plates/dumbbell in “Added”.
+            </span>
+          </div>
+        )}
+        {isUni && (
+          <div className="hint-note mt-s muted" style={{ fontSize: 11 }}>
+            Log one side — both sides are counted (×2 tonnage).
+          </div>
+        )}
+
         <div className="set-row mt-m">
           <div>
-            <label>Weight (kg)</label>
+            <label>{weightLabel}</label>
             <input
               type="number" inputMode="decimal" step="0.5" min="0"
               value={weight}
@@ -426,6 +472,12 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
           </button>
         </div>
 
+        {previewVol != null && (
+          <div className="muted mt-s" style={{ fontSize: 11 }}>
+            ≈ {previewVol} kg·{isTime ? 's' : 'r'} effective tonnage this set
+          </div>
+        )}
+
         <div className="logged-sets mt-m">
           {exercise.sets.map((s, i) => (
             <DraftSetRow
@@ -433,6 +485,7 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
               index={i}
               set={s}
               isTime={isTime}
+              libEx={libEx}
               onChange={(fields) => updateSetAt(i, fields)}
               onRemove={() => removeSetAt(i)}
             />
@@ -447,7 +500,7 @@ function ExerciseSetsEditor({ exercise, onChange, onBack, onRemove }) {
   );
 }
 
-function DraftSetRow({ index, set, isTime, onChange, onRemove }) {
+function DraftSetRow({ index, set, isTime, libEx, onChange, onRemove }) {
   const [editing, setEditing] = useState(false);
   const [w, setW] = useState(String(set.weight));
   const [r, setR] = useState(String(set.reps));
@@ -457,7 +510,7 @@ function DraftSetRow({ index, set, isTime, onChange, onRemove }) {
       <div className="logged-set">
         <span className="n">SET {index + 1}</span>
         <span className="value tabular">
-          {set.weight} kg {isTime ? `for ${set.reps}s` : `× ${set.reps}`}
+          {setLabel(libEx, set, isTime)}
         </span>
         <span className="row" style={{ gap: 6 }}>
           <button className="mini-btn" onClick={() => setEditing(true)}>Edit</button>
@@ -522,6 +575,20 @@ function LastTimeChip({ exerciseName }) {
 // ─────────────────────────────────────────────────────────────
 // Colored tags for compound exercises
 // ─────────────────────────────────────────────────────────────
+
+// Render the weight portion of a set row, aware of bodyweight / unilateral.
+function setLabel(libEx, s, isTime) {
+  const repsPart = isTime ? `for ${s.reps}s` : `× ${s.reps}`;
+  let weightPart;
+  if (libEx?.bodyweight) {
+    weightPart = s.weight > 0 ? `BW + ${s.weight} kg` : 'BW';
+  } else if (libEx?.unilateral) {
+    weightPart = `${s.weight} kg/side`;
+  } else {
+    weightPart = `${s.weight} kg`;
+  }
+  return `${weightPart} ${repsPart}`;
+}
 
 function CompoundMuscleHits({ exercise }) {
   if (!exercise.compound) return null;

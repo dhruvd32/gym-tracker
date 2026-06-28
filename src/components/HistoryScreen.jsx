@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, deleteSet, deleteSession, updateSetFields } from '../data/db.js';
 import { flushSyncQueue } from '../data/sync.js';
 import { findExercise } from '../data/exerciseLibrary.js';
+import { setVolume } from '../data/volume.js';
 
 // History screen — one row per workout session, tappable to expand.
 // Within an expanded session, each set row can have its weight/reps edited or
@@ -128,12 +129,15 @@ function HistorySetRow({ set, showToast }) {
       <div className={`logged-set ${set.isPR ? 'is-pr' : ''}`}>
         <span className="n">SET {set.setNumber}</span>
         <span className="value tabular">
-          {set.weight} kg {isTime ? `for ${set.reps}s` : `× ${set.reps}`}
+          {ex?.bodyweight
+            ? (set.weight > 0 ? `BW + ${set.weight} kg` : 'BW')
+            : ex?.unilateral ? `${set.weight} kg/side` : `${set.weight} kg`}
+          {' '}{isTime ? `for ${set.reps}s` : `× ${set.reps}`}
         </span>
         <span className="row" style={{ gap: 6 }}>
           {set.isPR
             ? <span className="pr-badge">PR</span>
-            : <span className="n tabular muted">{set.weight * set.reps} kg·{isTime ? 's' : 'r'}</span>}
+            : <span className="n tabular muted">{Math.round(setVolume(set))} kg·{isTime ? 's' : 'r'}</span>}
           <button className="mini-btn" onClick={() => setEditing(true)}>Edit</button>
           <button className="mini-btn danger" onClick={remove}>×</button>
         </span>
@@ -178,7 +182,7 @@ function groupIntoSessions(sets) {
   for (const s of sessions) {
     // Sort sets ascending by id so SET numbers read in order within a session.
     s.sets.sort((a, b) => a.id - b.id);
-    s.totalVolume = s.sets.reduce((sum, x) => sum + (x.weight || 0) * (x.reps || 0), 0);
+    s.totalVolume = s.sets.reduce((sum, x) => sum + setVolume(x), 0);
     s.setCount = s.sets.length;
 
     const exMap = new Map();

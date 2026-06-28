@@ -23,13 +23,13 @@ export function BodyHeatmap({ tonnageByGroup, tonnageBySub, highlightGroups, hig
       return highlightGroups.has(group) ? 'var(--accent)' : 'var(--grade-untrained)';
     }
 
-    if (tonnageBySub && sub) {
-      const key = `${group} — ${sub}`;
-      const t = tonnageBySub[key] || 0;
-      const tAll = tonnageBySub[`${group} — All Heads`] || 0;
-      return gradeMuscle(group, t + tAll).color;
-    }
-
+    // Shade every region of a muscle by that muscle's GROUP-level tonnage.
+    // Sub-muscle tonnage is intentionally NOT used for shading here: exercises
+    // record secondary work under sub-muscle names that don't always match a
+    // diagram region (e.g. squats credit "Glutes — Glute Max" while the glute
+    // shape is "Glute Max (Hip Extension)"), which used to leave trained muscles
+    // dark. Group-level shading keeps the body map consistent with the muscle
+    // list below it. Sub-muscle detail still drives that list's breakdown.
     return gradeMuscle(group, (tonnageByGroup || {})[group] || 0).color;
   };
 

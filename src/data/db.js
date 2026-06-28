@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import { setVolume } from './volume.js';
 
 export const db = new Dexie('gym-tracker');
 
@@ -177,11 +178,12 @@ export async function getLastSetsFor(exerciseName, limit = 6) {
     .then((rows) => rows.slice(0, limit));
 }
 
-export async function isPR(exerciseName, weight, reps) {
-  const volume = weight * reps;
+// `volume` is the effective tonnage for the candidate set (computed by the caller
+// via setVolumeFor so bodyweight/unilateral are accounted for consistently).
+export async function isPR(exerciseName, volume) {
   if (volume <= 0) return false;
   const prior = await db.sets.where('exerciseName').equals(exerciseName).toArray();
-  const bestPriorVolume = prior.reduce((max, s) => Math.max(max, (s.weight || 0) * (s.reps || 0)), 0);
+  const bestPriorVolume = prior.reduce((max, s) => Math.max(max, setVolume(s)), 0);
   return volume > bestPriorVolume;
 }
 

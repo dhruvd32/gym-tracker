@@ -14,6 +14,13 @@
 //   compound        — boolean
 //   prWeightKg      — last known PR (kg). 0 for bodyweight. null if unknown.
 //   prReps          — reps at PR. null if unknown.
+//   unilateral      — (optional) true for single-arm/single-leg moves. The user
+//                     logs one side; tonnage is doubled to count both sides.
+//   bodyweight      — (optional) true when the lifter's own mass is the load.
+//                     The set's `weight` is then *added* load (belt/plate/dumbbell).
+//   bwLoad          — (optional, with bodyweight) fraction of bodyweight actually
+//                     resisted by the target muscle (e.g. pull-up ~1.0, sit-up ~0.12).
+//                     Effective per-rep load = bodyweight × bwLoad + addedWeight.
 
 // Day keys. The original single "Push" was split into two focused push days:
 //   Push (Chest)     — upper + mid chest, side delts, upper traps, lateral + long head triceps
@@ -62,7 +69,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 15, prReps: 10,
   },
   {
-    name: 'Dips', day: DAY_PUSH_SHOULDERS,
+    name: 'Dips', day: DAY_PUSH_SHOULDERS, bodyweight: true, bwLoad: 1.0,
     primaryGroup: 'Chest', primarySub: 'Lower Chest', primaryPct: 55,
     secondary: [
       { group: 'Triceps', sub: 'All Heads', pct: 30 },
@@ -195,7 +202,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Diamond Push-Ups', day: PUSH_BOTH,
+    name: 'Diamond Push-Ups', day: PUSH_BOTH, bodyweight: true, bwLoad: 0.65,
     primaryGroup: 'Triceps', primarySub: 'All Heads', primaryPct: 50,
     secondary: [
       { group: 'Chest', sub: 'Mid Chest', pct: 30 },
@@ -269,7 +276,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 36, prReps: 9,
   },
   {
-    name: 'Single Arm Seated Row', day: 'Pull',
+    name: 'Single Arm Seated Row', day: 'Pull', unilateral: true,
     primaryGroup: 'Back', primarySub: 'Mid-Back (Rhomboids / Mid Traps)', primaryPct: 65,
     secondary: [
       { group: 'Back', sub: 'Lats', pct: 20 },
@@ -278,7 +285,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 14, prReps: 9,
   },
   {
-    name: 'Single Arm Dumbbell Row', day: 'Pull',
+    name: 'Single Arm Dumbbell Row', day: 'Pull', unilateral: true,
     primaryGroup: 'Back', primarySub: 'Lats (Width / Vertical Pull)', primaryPct: 60,
     secondary: [
       { group: 'Back', sub: 'Mid-Back', pct: 25 },
@@ -287,7 +294,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Wide Grip Pull Up', day: 'Pull',
+    name: 'Wide Grip Pull Up', day: 'Pull', bodyweight: true, bwLoad: 1.0,
     primaryGroup: 'Back', primarySub: 'Lats (Width / Vertical Pull)', primaryPct: 65,
     secondary: [
       { group: 'Biceps', sub: 'Brachialis', pct: 20 },
@@ -307,7 +314,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 45, prReps: 8,
   },
   {
-    name: 'Close Grip Pull Up (Chin Up)', day: 'Pull',
+    name: 'Close Grip Pull Up (Chin Up)', day: 'Pull', bodyweight: true, bwLoad: 1.0,
     primaryGroup: 'Back', primarySub: 'Lats (Width / Vertical Pull)', primaryPct: 55,
     secondary: [
       { group: 'Biceps', sub: 'Short Head', pct: 30 },
@@ -349,7 +356,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: 10, prReps: 8,
   },
   {
-    name: 'Concentration Curl', day: 'Pull',
+    name: 'Concentration Curl', day: 'Pull', unilateral: true,
     primaryGroup: 'Biceps', primarySub: 'Short Head (Inner Bicep / Thickness)', primaryPct: 85,
     secondary: [],
     compound: false, prWeightKg: null, prReps: null,
@@ -379,7 +386,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: 10, prReps: null,
   },
   {
-    name: 'Dead Hangs', day: 'Pull',
+    name: 'Dead Hangs', day: 'Pull', bodyweight: true, bwLoad: 1.0,
     primaryGroup: 'Forearms', primarySub: 'Inner Forearm (Wrist Flexors)', primaryPct: 60,
     secondary: [
       { group: 'Back', sub: 'Lats', pct: 30 },
@@ -400,7 +407,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Bulgarian Split Squats', day: 'Legs',
+    name: 'Bulgarian Split Squats', day: 'Legs', unilateral: true,
     primaryGroup: 'Quads', primarySub: 'Rectus Femoris / Vastus', primaryPct: 55,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 20 },
@@ -428,7 +435,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Single Leg RDL', day: 'Legs',
+    name: 'Single Leg RDL', day: 'Legs', unilateral: true,
     primaryGroup: 'Hamstrings', primarySub: 'Biceps Femoris (Hip Hinge)', primaryPct: 60,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 25 },
@@ -446,7 +453,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Reverse Lunges', day: 'Legs',
+    name: 'Reverse Lunges', day: 'Legs', bodyweight: true, bwLoad: 0.6,
     primaryGroup: 'Quads', primarySub: 'Rectus Femoris / Vastus', primaryPct: 50,
     secondary: [
       { group: 'Glutes', sub: 'Glute Max', pct: 20 },
@@ -477,7 +484,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Glute Bridge', day: 'Legs',
+    name: 'Glute Bridge', day: 'Legs', bodyweight: true, bwLoad: 0.3,
     primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension)', primaryPct: 65,
     secondary: [
       { group: 'Hamstrings', sub: 'Biceps Femoris', pct: 25 },
@@ -486,7 +493,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
-    name: 'Cable Kickbacks', day: 'Legs',
+    name: 'Cable Kickbacks', day: 'Legs', unilateral: true,
     primaryGroup: 'Glutes', primarySub: 'Glute Max (Hip Extension)', primaryPct: 80,
     secondary: [{ group: 'Hamstrings', sub: 'Biceps Femoris', pct: 20 }],
     compound: false, prWeightKg: null, prReps: null,
@@ -512,13 +519,13 @@ export const EXERCISES = [
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Decline Sit-Up', day: 'Core',
+    name: 'Decline Sit-Up', day: 'Core', bodyweight: true, bwLoad: 0.12,
     primaryGroup: 'Core', primarySub: 'Upper Abs (Rectus Abdominis)', primaryPct: 80,
     secondary: [{ group: 'Core', sub: 'Obliques', pct: 20 }],
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
-    name: 'Hanging Leg Raise', day: 'Core',
+    name: 'Hanging Leg Raise', day: 'Core', bodyweight: true, bwLoad: 0.15,
     primaryGroup: 'Core', primarySub: 'Lower Abs (Rectus Abdominis)', primaryPct: 75,
     secondary: [
       { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 15 },
@@ -527,19 +534,19 @@ export const EXERCISES = [
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
-    name: 'Lying Leg Raise', day: 'Core',
+    name: 'Lying Leg Raise', day: 'Core', bodyweight: true, bwLoad: 0.12,
     primaryGroup: 'Core', primarySub: 'Lower Abs (Rectus Abdominis)', primaryPct: 85,
     secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 15 }],
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
-    name: "Captain's Chair Knee Raise", day: 'Core',
+    name: "Captain's Chair Knee Raise", day: 'Core', bodyweight: true, bwLoad: 0.12,
     primaryGroup: 'Core', primarySub: 'Lower Abs (Rectus Abdominis)', primaryPct: 80,
     secondary: [{ group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 20 }],
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
-    name: 'Ab Wheel Rollout', day: 'Core',
+    name: 'Ab Wheel Rollout', day: 'Core', bodyweight: true, bwLoad: 0.2,
     primaryGroup: 'Core', primarySub: 'Upper Abs (Rectus Abdominis)', primaryPct: 60,
     secondary: [
       { group: 'Core', sub: 'Deep Core (Transverse Abdominis)', pct: 20 },
@@ -549,7 +556,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 0, prReps: null,
   },
   {
-    name: 'Russian Twist', day: 'Core',
+    name: 'Russian Twist', day: 'Core', bodyweight: true, bwLoad: 0.08,
     primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 80,
     secondary: [{ group: 'Core', sub: 'Upper Abs (Rectus Abdominis)', pct: 20 }],
     compound: false, prWeightKg: 0, prReps: null,
@@ -564,7 +571,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: null, prReps: null,
   },
   {
-    name: 'Bicycle Crunch', day: 'Core',
+    name: 'Bicycle Crunch', day: 'Core', bodyweight: true, bwLoad: 0.08,
     primaryGroup: 'Core', primarySub: 'Obliques', primaryPct: 65,
     secondary: [
       { group: 'Core', sub: 'Upper Abs (Rectus Abdominis)', pct: 20 },
@@ -573,7 +580,7 @@ export const EXERCISES = [
     compound: false, prWeightKg: 0, prReps: null,
   },
   {
-    name: 'Plank', day: 'Core',
+    name: 'Plank', day: 'Core', bodyweight: true, bwLoad: 0.05,
     primaryGroup: 'Core', primarySub: 'Deep Core (Transverse Abdominis)', primaryPct: 70,
     secondary: [
       { group: 'Shoulders', sub: 'Front Delts', pct: 15 },
@@ -582,7 +589,7 @@ export const EXERCISES = [
     compound: true, prWeightKg: 0, prReps: null, measureType: 'time',
   },
   {
-    name: 'Dead Bug', day: 'Core',
+    name: 'Dead Bug', day: 'Core', bodyweight: true, bwLoad: 0.05,
     primaryGroup: 'Core', primarySub: 'Deep Core (Transverse Abdominis)', primaryPct: 75,
     secondary: [{ group: 'Core', sub: 'Lower Abs (Rectus Abdominis)', pct: 25 }],
     compound: false, prWeightKg: 0, prReps: null,

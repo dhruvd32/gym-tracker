@@ -31,13 +31,45 @@ export function weekLabel(start = startOfWeekMon(), end = endOfWeekSun()) {
   return `${start.toLocaleDateString('en-GB', fmt)} — ${end.toLocaleDateString('en-GB', fmt)}`;
 }
 
+// ——— Effective tonnage per set ———
+
+// Effective per-set tonnage, accounting for exercise type:
+//   • bodyweight exercises  → (bodyweight × bwLoad + addedWeight) × reps
+//   • unilateral exercises  → doubled (the user logs one side, both sides count)
+//   • everything else       → weight × reps
+//
+// `ex` is the library entry (may be undefined). `bodyweightKg` is the lifter's
+// body mass to use for bodyweight movements — stamped onto the set at log time so
+// historical weeks stay stable even if bodyweight changes later.
+export function setVolumeFor(ex, set, bodyweightKg) {
+  const reps = set.reps || 0;
+  if (reps <= 0) return 0;
+
+  let perRep;
+  if (ex?.bodyweight) {
+    // For bodyweight moves, `set.weight` means *added* load (belt/plate/dumbbell).
+    perRep = (bodyweightKg || 0) * (ex.bwLoad ?? 1) + (set.weight || 0);
+  } else {
+    perRep = set.weight || 0;
+  }
+
+  let v = perRep * reps;
+  if (ex?.unilateral) v *= 2;
+  return v > 0 ? v : 0;
+}
+
+// Effective tonnage for a stored set (looks the exercise up by name and uses the
+// bodyweight stamped on the set).
+export function setVolume(set) {
+  return setVolumeFor(findExercise(set.exerciseName), set, set.bodyweightKg);
+}
+
 // ——— Volume distribution ———
 
 // For a given set, return { [muscleGroup]: tonnage } using primary+secondary %.
-// Tonnage = weight × reps.  Bodyweight sets (weight = 0) contribute 0 — the user
-// can log a nominal weight (e.g. body mass) to make bodyweight work count.
+// Tonnage is the effective tonnage from setVolume (handles bodyweight + unilateral).
 export function distributeSetTonnage(set) {
-  const volume = (set.weight || 0) * (set.reps || 0);
+  const volume = setVolume(set);
   if (volume <= 0) return {};
 
   const ex = findExercise(set.exerciseName);
@@ -65,7 +97,7 @@ export function distributeSetTonnage(set) {
 
 // Sub-muscle breakdown too — useful for tooltips on the heatmap.
 export function distributeSetSubMuscleTonnage(set) {
-  const volume = (set.weight || 0) * (set.reps || 0);
+  const volume = setVolume(set);
   if (volume <= 0) return {};
 
   const ex = findExercise(set.exerciseName);
@@ -123,7 +155,7 @@ export const WEEKLY_TARGETS = {
   Glutes:     { min: 1500, peak: 4500, over: 9000 },
   Calves:     { min: 800,  peak: 2500, over: 5500 },
   Traps:      { min: 500,  peak: 1800, over: 4000 },
-  Core:       { min: 300,  peak: 1200, over: 3000 },
+  Core:       { min: 400,  peak: 1800, over: 4500 },
 };
 
 // Returns { state, ratio, color } for a given muscle's weekly tonnage.
