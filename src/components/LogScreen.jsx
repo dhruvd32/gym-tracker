@@ -16,7 +16,8 @@ import {
 } from '../data/draft.js';
 
 const DAYS = [
-  { key: 'Push', letter: 'P', name: 'Push' },
+  { key: 'Push (Chest)', letter: 'P', name: 'Push · Chest' },
+  { key: 'Push (Shoulders)', letter: 'P', name: 'Push · Shoulders' },
   { key: 'Pull', letter: 'L', name: 'Pull' },
   { key: 'Legs', letter: 'G', name: 'Legs' },
   { key: 'Core', letter: 'C', name: 'Core' },
