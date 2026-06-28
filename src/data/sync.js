@@ -148,6 +148,7 @@ async function handleUpdate(job, userId) {
   await updateDoc(ref, {
     weight_kg: set.weight,
     reps:      set.reps,
+    bodyweight_kg: set.bodyweightKg ?? null,
     is_pr:     !!set.isPR,
     updated_at: serverTimestamp(),
   });
@@ -188,6 +189,7 @@ function toFirestore(set) {
     set_number:    set.setNumber,
     weight_kg:     set.weight,
     reps:          set.reps,
+    bodyweight_kg: set.bodyweightKg ?? null,
     is_pr:         !!set.isPR,
   };
 }
@@ -206,6 +208,7 @@ function fromFirestore(id, row) {
     setNumber:     row.set_number,
     weight:        row.weight_kg,
     reps:          row.reps,
+    bodyweightKg:  row.bodyweight_kg ?? undefined,
     isPR:          row.is_pr,
     synced:        1,
     createdAt:     tsToIso(row.created_at),

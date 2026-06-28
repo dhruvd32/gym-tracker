@@ -11,6 +11,7 @@ import {
   aggregateWeekSubMuscleTonnage,
   gradeMuscle,
   formatKg,
+  setVolume,
   WEEKLY_TARGETS,
 } from '../data/volume.js';
 
@@ -39,7 +40,7 @@ export function HeatmapScreen() {
   const tonnage = useMemo(() => aggregateWeekTonnage(sets), [sets]);
   const subTonnage = useMemo(() => aggregateWeekSubMuscleTonnage(sets), [sets]);
   const totalVolume = useMemo(
-    () => sets.reduce((sum, s) => sum + (s.weight || 0) * (s.reps || 0), 0),
+    () => sets.reduce((sum, s) => sum + setVolume(s), 0),
     [sets]
   );
 
